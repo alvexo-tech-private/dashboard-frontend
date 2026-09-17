@@ -36,6 +36,12 @@ export class AuthService {
       );
   }
 
+  changePassword(currentPassword: string, newPassword: string): Observable<void> {
+    return this.http
+      .post<ApiResponse<void>>(`${environment.apiUrl}/api/auth/change-password`, { currentPassword, newPassword })
+      .pipe(map(() => void 0));
+  }
+
   logout(): void {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
     this.adminName.set(null);

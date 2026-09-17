@@ -51,6 +51,14 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
       },
+      // Personal account settings (change password) — reachable from the
+      // toolbar, not NAV_GROUPS, since it's the same action for every role
+      // rather than a role-gated feature area.
+      {
+        path: 'account/settings',
+        loadComponent: () =>
+          import('./features/account/change-password/change-password').then((m) => m.ChangePassword),
+      },
       // Not part of NAV_GROUPS/moduleRoutes above since it isn't a sidenav
       // destination itself — it's opened by selecting a row in the Workshop
       // Directory (workshops/directory). Same allowed roles as that group.

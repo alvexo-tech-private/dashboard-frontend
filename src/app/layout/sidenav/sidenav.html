@@ -88,6 +88,9 @@
       >
         <mat-icon>{{ theme.mode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
       </button>
+      <a mat-icon-button routerLink="/account/settings" matTooltip="Account settings" aria-label="Account settings">
+        <mat-icon>manage_accounts</mat-icon>
+      </a>
       <button mat-icon-button (click)="logout()" aria-label="Log out">
         <mat-icon>logout</mat-icon>
       </button>
