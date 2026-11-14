@@ -18,6 +18,11 @@ const moduleRoutes: Routes = NAV_GROUPS.flatMap((group) =>
             import('./features/workshops/mechanics-directory/mechanics-directory').then(
               (m) => m.MechanicsDirectory,
             )
+        : child.path === 'sales-agents/directory'
+        ? () =>
+            import('./features/sales-agents/sales-agent-directory/sales-agent-directory').then(
+              (m) => m.SalesAgentDirectory,
+            )
         : child.path === 'riders/directory'
         ? () => import('./features/riders/rider-directory/rider-directory').then((m) => m.RiderDirectory)
         : child.path === 'workshops/registration-requests'

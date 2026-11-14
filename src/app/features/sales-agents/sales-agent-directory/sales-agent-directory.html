@@ -1,0 +1,114 @@
+<div class="sales-agent-directory">
+  <div class="page-header">
+    <h1>Sales Agent Directory</h1>
+    <p>Everyone registered as a sales agent. Use the ⋮ menu on a row to suspend, restore or delete an account.</p>
+  </div>
+
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Search</mat-label>
+    <input
+      matInput
+      placeholder="Name, email, mobile or referral code"
+      [value]="searchTerm()"
+      (input)="onSearchInput($any($event.target).value)"
+    />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <app-account-status-filter
+    class="status-filter"
+    [value]="statusFilter()"
+    (changed)="onStatusFilterChange($event)"
+  ></app-account-status-filter>
+
+  @if (loading()) {
+    <div class="state-panel">
+      <mat-spinner diameter="32"></mat-spinner>
+      <span>Loading sales agents…</span>
+    </div>
+  } @else if (error()) {
+    <mat-card class="state-panel state-panel--error">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error() }}</span>
+    </mat-card>
+  } @else if (agents().length === 0) {
+    <mat-card class="state-panel">
+      <mat-icon>badge</mat-icon>
+      <span>No sales agents found.</span>
+    </mat-card>
+  } @else {
+    <mat-card class="table-card">
+      <table mat-table [dataSource]="agents()" matSort class="striped-table" (matSortChange)="onSortChange($event)">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="firstName">Name</th>
+          <td mat-cell *matCellDef="let a">{{ a.firstName }} {{ a.lastName }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="contact">
+          <th mat-header-cell *matHeaderCellDef>Contact</th>
+          <td mat-cell *matCellDef="let a">
+            <div><app-masked-phone [number]="a.mobileNumber"></app-masked-phone></div>
+            <div class="muted">{{ a.email }}</div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="city">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="city">City</th>
+          <td mat-cell *matCellDef="let a">{{ a.city || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="referralCode">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="referralCode">Referral Code</th>
+          <td mat-cell *matCellDef="let a">{{ a.referralCode || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="referrals">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="totalReferrals">Referrals</th>
+          <td mat-cell *matCellDef="let a">
+            <div>{{ a.totalReferrals ?? 0 }}</div>
+            <div class="muted">
+              {{ (a.totalBonusEarned ?? 0) | currency: 'INR' : 'symbol' : '1.0-2' }} earned
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="accountStatus">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="active">Status</th>
+          <td mat-cell *matCellDef="let a">
+            <app-account-status-chip [status]="a.accountStatus"></app-account-status-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="createdAt">Registered On</th>
+          <td mat-cell *matCellDef="let a">{{ a.createdAt | date: 'mediumDate' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="actions-cell"><span class="cdk-visually-hidden">Actions</span></th>
+          <td mat-cell *matCellDef="let a" class="actions-cell">
+            <app-account-actions
+              [userId]="a.id"
+              [status]="a.accountStatus"
+              [name]="a.firstName + ' ' + a.lastName"
+              kind="sales agent"
+              (changed)="onAccountChanged()"
+            ></app-account-actions>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator
+        [length]="totalElements()"
+        [pageSize]="pageSize()"
+        [pageIndex]="pageIndex()"
+        [pageSizeOptions]="pageSizeOptions"
+        (page)="onPageChange($event)"
+        showFirstLastButtons
+      ></mat-paginator>
+    </mat-card>
+  }
+</div>

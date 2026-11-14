@@ -1,3 +1,5 @@
+import { AccountStatus } from './account';
+
 export interface VehicleUser {
   id: number;
   firstName: string;
@@ -9,5 +11,6 @@ export interface VehicleUser {
   emailVerified: boolean;
   mobileVerified: boolean;
   active: boolean;
+  accountStatus: AccountStatus;
   createdAt: string;
 }

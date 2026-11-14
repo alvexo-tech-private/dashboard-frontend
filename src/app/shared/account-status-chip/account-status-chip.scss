@@ -1,0 +1,22 @@
+// Light-mode colors match the --approved/--pending/--rejected chips used
+// across the directories; the dark-mode overrides live globally in
+// styles.scss (html.dark-theme .status-chip--*) and take precedence.
+@use '@angular/material' as mat;
+
+.status-chip {
+  font-size: 0.78rem;
+  min-height: 24px;
+
+  &--approved {
+    @include mat.chips-overrides((label-text-color: #027a48, elevated-container-color: #ecfdf3));
+  }
+
+  &--pending {
+    @include mat.chips-overrides((label-text-color: #b54708, elevated-container-color: #fffaeb));
+  }
+
+  &--rejected {
+    @include mat.chips-overrides((label-text-color: #b42318, elevated-container-color: #fef3f2));
+  }
+}
+  

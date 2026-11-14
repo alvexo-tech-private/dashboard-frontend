@@ -15,3 +15,20 @@ export function httpErrorMessage(error: unknown, fallback: string): string {
   }
   return fallback;
 }
+
+/**
+ * Like httpErrorMessage, but for actions whose 4xx responses carry a
+ * message written for the admin to read (e.g. "This workshop still has
+ * 2 open booking(s)…"): shows that message instead of the generic fallback.
+ * 5xx responses still get the fallback, since their message is not meant
+ * for end users.
+ */
+export function apiErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof HttpErrorResponse && error.status >= 400 && error.status < 500) {
+    const message = error.error?.message;
+    if (typeof message === 'string' && message.trim()) {
+      return message;
+    }
+  }
+  return httpErrorMessage(error, fallback);
+}

@@ -1,0 +1,42 @@
+@if (loading()) {
+  <div class="history-state">
+    <mat-spinner diameter="24"></mat-spinner>
+    <span>Loading history…</span>
+  </div>
+} @else if (error()) {
+  <div class="history-state history-state--error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error() }}</span>
+  </div>
+} @else if (entries().length === 0) {
+  <div class="history-state">
+    <mat-icon>history</mat-icon>
+    <span>No suspend, restore or delete actions have been taken on this account.</span>
+  </div>
+} @else {
+  <ol class="timeline">
+    @for (entry of entries(); track entry.id) {
+      <li class="timeline-item" [class]="'timeline-item--' + entry.action.toLowerCase()">
+        <mat-icon class="timeline-icon">{{ actionLabel(entry).icon }}</mat-icon>
+        <div class="timeline-body">
+          <div class="timeline-title">
+            <strong>{{ actionLabel(entry).label }}</strong>
+            <span class="muted">by {{ entry.performedBy }} · {{ entry.performedAt | date: 'medium' }}</span>
+          </div>
+          @if (entry.reason) {
+            <div class="timeline-reason">“{{ entry.reason }}”</div>
+          }
+        </div>
+      </li>
+    }
+  </ol>
+  @if (totalElements() > pageSize()) {
+    <mat-paginator
+      [length]="totalElements()"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      [hidePageSize]="true"
+      (page)="onPageChange($event)"
+    ></mat-paginator>
+  }
+}
