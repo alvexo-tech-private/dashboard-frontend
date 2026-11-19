@@ -74,6 +74,19 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: [AdminRole.SUPER_ADMIN, AdminRole.OPERATIONS_ADMIN] },
       },
+      {
+        path: 'riders/directory/:id',
+        loadComponent: () => import('./features/riders/rider-detail/rider-detail').then((m) => m.RiderDetail),
+        canActivate: [roleGuard],
+        data: { roles: [AdminRole.SUPER_ADMIN, AdminRole.OPERATIONS_ADMIN] },
+      },
+      {
+        path: 'sales-agents/directory/:id',
+        loadComponent: () =>
+          import('./features/sales-agents/sales-agent-detail/sales-agent-detail').then((m) => m.SalesAgentDetail),
+        canActivate: [roleGuard],
+        data: { roles: [AdminRole.SUPER_ADMIN, AdminRole.OPERATIONS_ADMIN] },
+      },
       ...moduleRoutes,
     ],
   },

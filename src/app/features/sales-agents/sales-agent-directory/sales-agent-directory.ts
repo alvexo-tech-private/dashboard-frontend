@@ -1,4 +1,5 @@
 import { Component, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -68,7 +69,10 @@ export class SalesAgentDirectory {
 
   private readonly searchInput$ = new Subject<string>();
 
-  constructor(private salesAgentService: SalesAgentService) {
+  constructor(
+    private salesAgentService: SalesAgentService,
+    private router: Router,
+  ) {
     this.searchInput$
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
       .subscribe((term) => {
@@ -77,6 +81,10 @@ export class SalesAgentDirectory {
         this.load();
       });
     this.load();
+  }
+
+  viewAgent(id: number): void {
+    this.router.navigate(['/sales-agents/directory', id]);
   }
 
   onSearchInput(value: string): void {

@@ -112,6 +112,19 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   text-align: right;
 }
 
+// Directory rows that open a detail page, and right-aligned number columns.
+.clickable-row {
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--mat-sys-surface-container-high) !important;
+  }
+}
+
+.num {
+  text-align: right !important;
+}
+
 // Status chip colors are hardcoded pastel hex (not theme tokens) so they
 // need an explicit dark-mode variant to stay legible against dark cards.
 // Uses mat.chips-overrides (not plain background/color) because a bare

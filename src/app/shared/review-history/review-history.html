@@ -1,0 +1,58 @@
+@if (loading()) {
+  <div class="list-state">
+    <mat-spinner diameter="24"></mat-spinner>
+    <span>Loading reviews…</span>
+  </div>
+} @else if (error()) {
+  <div class="list-state list-state--error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error() }}</span>
+  </div>
+} @else if (rows().length === 0) {
+  <div class="list-state">
+    <mat-icon>rate_review</mat-icon>
+    <span>{{ perspective() === 'rider' ? 'This rider has not written any reviews.' : 'No reviews yet.' }}</span>
+  </div>
+} @else {
+  <ul class="reviews">
+    @for (r of rows(); track r.id) {
+      <li class="review">
+        <div class="review-head">
+          <span class="stars" [attr.aria-label]="(r.rating ?? 0) + ' out of 5'">
+            @for (s of stars; track s) {
+              <mat-icon [class.off]="s > (r.rating ?? 0)">star</mat-icon>
+            }
+          </span>
+          @if (perspective() === 'rider') {
+            @if (r.mechanicId) {
+              <a [routerLink]="['/workshops/directory', r.mechanicId]">{{ r.workshopName || 'Workshop' }}</a>
+            }
+          } @else {
+            @if (r.riderId) {
+              <a [routerLink]="['/riders/directory', r.riderId]">{{ r.riderName || 'Rider' }}</a>
+            }
+          }
+          <span class="muted">
+            {{ r.createdAt | date: 'mediumDate' }}
+            @if (r.bookingNumber) { · Booking {{ r.bookingNumber }} }
+          </span>
+        </div>
+        @if (r.comment) {
+          <p class="comment">{{ r.comment }}</p>
+        }
+        @if (r.workshopResponse) {
+          <p class="response"><strong>Workshop reply:</strong> {{ r.workshopResponse }}</p>
+        }
+      </li>
+    }
+  </ul>
+  @if (totalElements() > pageSize()) {
+    <mat-paginator
+      [length]="totalElements()"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      [hidePageSize]="true"
+      (page)="onPageChange($event)"
+    ></mat-paginator>
+  }
+}

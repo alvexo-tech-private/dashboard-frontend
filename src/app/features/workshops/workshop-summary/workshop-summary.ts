@@ -14,6 +14,9 @@ import { httpErrorMessage } from '../../../core/utils/http-error-message';
 import { AccountStatusChip } from '../../../shared/account-status-chip/account-status-chip';
 import { AccountActions } from '../../../shared/account-actions/account-actions';
 import { AccountHistory } from '../../../shared/account-history/account-history';
+import { BookingHistory } from '../../../shared/booking-history/booking-history';
+import { ReviewHistory } from '../../../shared/review-history/review-history';
+import { MatTabsModule } from '@angular/material/tabs';
 
 /**
  * ADMIN-US-02 Workshop Summary (BR-06..BR-11), opened by selecting a row in
@@ -37,6 +40,9 @@ import { AccountHistory } from '../../../shared/account-history/account-history'
     AccountStatusChip,
     AccountActions,
     AccountHistory,
+    BookingHistory,
+    ReviewHistory,
+    MatTabsModule,
   ],
   templateUrl: './workshop-summary.html',
   styleUrl: './workshop-summary.scss',

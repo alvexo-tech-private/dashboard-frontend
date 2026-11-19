@@ -147,10 +147,26 @@
         </div>
       </mat-card>
 
-      <mat-card class="summary-card">
-        <h2>Account History</h2>
-        <app-account-history [userId]="w.id" [refreshKey]="historyRefresh()"></app-account-history>
-      </mat-card>
     </div>
+
+    <mat-card class="summary-card section-tabs">
+      <mat-tab-group animationDuration="0ms">
+        <mat-tab label="Bookings">
+          <div class="tab-body">
+            <app-booking-history [userId]="w.id" perspective="workshop"></app-booking-history>
+          </div>
+        </mat-tab>
+        <mat-tab label="Reviews">
+          <div class="tab-body">
+            <app-review-history [userId]="w.id" perspective="workshop"></app-review-history>
+          </div>
+        </mat-tab>
+        <mat-tab label="Account History">
+          <div class="tab-body">
+            <app-account-history [userId]="w.id" [refreshKey]="historyRefresh()"></app-account-history>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card>
   }
 </div>

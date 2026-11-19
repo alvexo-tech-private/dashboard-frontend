@@ -1,4 +1,4 @@
-import { Component, effect, input, signal } from '@angular/core';
+import { Component, effect, input, signal, untracked } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -35,10 +35,16 @@ export class AccountHistory {
   readonly totalElements = signal(0);
 
   constructor(private accountService: AccountService) {
+    // Only userId / refreshKey should re-trigger this. Without untracked(),
+    // load() reading pageIndex made every page change re-run the effect and
+    // snap back to page 0.
     effect(() => {
       this.refreshKey();
-      this.pageIndex.set(0);
-      this.load(this.userId());
+      const userId = this.userId();
+      untracked(() => {
+        this.pageIndex.set(0);
+        this.load(userId);
+      });
     });
   }
 

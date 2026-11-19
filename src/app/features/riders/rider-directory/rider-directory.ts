@@ -1,4 +1,5 @@
 import { Component, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -49,6 +50,8 @@ export class RiderDirectory {
     'contact',
     'city',
     'verified',
+    'vehicleCount',
+    'totalBookings',
     'accountStatus',
     'createdAt',
     'actions',
@@ -70,7 +73,10 @@ export class RiderDirectory {
 
   private readonly searchInput$ = new Subject<string>();
 
-  constructor(private vehicleUserService: VehicleUserService) {
+  constructor(
+    private vehicleUserService: VehicleUserService,
+    private router: Router,
+  ) {
     this.searchInput$
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
       .subscribe((term) => {
@@ -79,6 +85,11 @@ export class RiderDirectory {
         this.load();
       });
     this.load();
+  }
+
+  /** ADMIN-US-08 AC-06: selecting a rider opens Rider Details. */
+  viewRider(id: number): void {
+    this.router.navigate(['/riders/directory', id]);
   }
 
   onSearchInput(value: string): void {

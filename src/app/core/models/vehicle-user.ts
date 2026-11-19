@@ -13,4 +13,6 @@ export interface VehicleUser {
   active: boolean;
   accountStatus: AccountStatus;
   createdAt: string;
+  vehicleCount: number;
+  totalBookings: number;
 }
