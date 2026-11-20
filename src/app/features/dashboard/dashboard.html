@@ -15,7 +15,7 @@
       <h2>{{ section.title }}</h2>
       <div class="kpi-grid">
         @for (tile of section.tiles; track tile.label) {
-          <mat-card class="kpi-tile">
+          <ng-template #tileBody>
             <div class="icon-chip">
               <mat-icon>{{ tile.icon }}</mat-icon>
             </div>
@@ -23,7 +23,23 @@
               <div class="kpi-value">{{ tileValue(tile) }}</div>
               <div class="kpi-label">{{ tile.label }}</div>
             </div>
-          </mat-card>
+          </ng-template>
+          @if (tileLink(tile); as link) {
+            <a
+              class="kpi-tile-link"
+              [routerLink]="link.path"
+              [queryParams]="link.query"
+              [matTooltip]="tile.hint ?? ''"
+            >
+              <mat-card class="kpi-tile kpi-tile--link">
+                <ng-container [ngTemplateOutlet]="tileBody"></ng-container>
+              </mat-card>
+            </a>
+          } @else {
+            <mat-card class="kpi-tile" [matTooltip]="tile.hint ?? ''">
+              <ng-container [ngTemplateOutlet]="tileBody"></ng-container>
+            </mat-card>
+          }
         }
       </div>
     </section>

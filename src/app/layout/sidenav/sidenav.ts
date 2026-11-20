@@ -13,6 +13,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { ADMIN_ROLE_LABELS } from '../../core/models/admin-role';
 import { NAV_GROUPS } from '../../core/nav-items';
+import { visibleNavGroups } from '../../core/models/nav-item';
 
 @Component({
   selector: 'app-sidenav',
@@ -37,7 +38,7 @@ export class SideNav {
   readonly navGroups = computed(() => {
     const role = this.auth.currentRole();
     if (!role) return [];
-    return NAV_GROUPS.filter((g) => g.roles.includes(role));
+    return visibleNavGroups(NAV_GROUPS, role);
   });
 
   // Icon-only rail mode (matches the TailAdmin reference's collapsed

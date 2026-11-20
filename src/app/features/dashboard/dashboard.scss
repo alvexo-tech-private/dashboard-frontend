@@ -87,7 +87,7 @@ $chip-colors: #465fff, #f79009, #f04438, #12b76a, #7a5af8;
 }
 
 @for $i from 1 through list.length($chip-colors) {
-  .kpi-grid .kpi-tile:nth-of-type(5n + #{$i}) .icon-chip,
+  .kpi-grid > :nth-child(5n + #{$i}) .icon-chip,
   .quick-nav-grid .quick-nav-card:nth-of-type(5n + #{$i}) .icon-chip {
     background: list.nth($chip-colors, $i);
   }
@@ -155,5 +155,20 @@ $chip-colors: #465fff, #f79009, #f04438, #12b76a, #7a5af8;
       box-shadow: 0 4px 8px rgba(16, 24, 40, 0.06), 0 8px 20px rgba(16, 24, 40, 0.1);
       transform: translateY(-2px);
     }
+  }
+}
+
+.kpi-tile-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.kpi-tile--link {
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 0 0 1px var(--mat-sys-primary), 0 1px 3px rgba(16, 24, 40, 0.06);
   }
 }

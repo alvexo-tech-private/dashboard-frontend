@@ -1,0 +1,6 @@
+@use '../../../shared/styles/report-page';
+
+.issue {
+  color: var(--mat-sys-error);
+  font-weight: 600;
+}

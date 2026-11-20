@@ -1,0 +1,125 @@
+<div class="tab-body">
+  <div class="report-toolbar">
+    <span class="muted">Bookings scheduled in the selected range. Select a status to filter.</span>
+    <span class="spacer"></span>
+    <app-export-menu
+      path="bookings"
+      [range]="range()"
+      [filters]="filters()"
+      [disabled]="!report() || report()!.rows.totalElements === 0"
+    ></app-export-menu>
+  </div>
+
+  @if (report(); as r) {
+    <div class="status-breakdown">
+      <button type="button" class="status-pill" [class.status-pill--active]="!status()" (click)="selectStatus(null)">
+        All <strong>{{ allStatusTotal() }}</strong>
+      </button>
+      @for (s of r.statusCounts; track s.status) {
+        <button
+          type="button"
+          class="status-pill"
+          [class.status-pill--active]="status() === s.status"
+          (click)="selectStatus(s.status)"
+        >
+          {{ statusLabel(s.status) }} <strong>{{ s.count }}</strong>
+        </button>
+      }
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="state-panel">
+      <mat-spinner diameter="32"></mat-spinner>
+      <span>Loading bookings…</span>
+    </div>
+  } @else if (error()) {
+    <mat-card class="state-panel state-panel--error">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error() }}</span>
+    </mat-card>
+  } @else if (report(); as r) {
+    @if (r.rows.totalElements === 0) {
+      <mat-card class="state-panel">
+        <mat-icon>event_busy</mat-icon>
+        <span>No bookings in this range.</span>
+      </mat-card>
+    } @else {
+      <mat-card class="table-card">
+        <table mat-table [dataSource]="r.rows.content" class="striped-table">
+          <ng-container matColumnDef="bookingNumber">
+            <th mat-header-cell *matHeaderCellDef>Booking</th>
+            <td mat-cell *matCellDef="let b" class="nowrap">{{ b.bookingNumber }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="scheduled">
+            <th mat-header-cell *matHeaderCellDef>Scheduled For</th>
+            <td mat-cell *matCellDef="let b" class="nowrap">{{ b.scheduledDateTime | date: 'd MMM y, h:mm a' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="rider">
+            <th mat-header-cell *matHeaderCellDef>Rider</th>
+            <td mat-cell *matCellDef="let b">{{ b.riderName || '—' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="workshop">
+            <th mat-header-cell *matHeaderCellDef>Workshop</th>
+            <td mat-cell *matCellDef="let b">{{ b.workshopName || '—' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="service">
+            <th mat-header-cell *matHeaderCellDef>Service</th>
+            <td mat-cell *matCellDef="let b">
+              {{ b.serviceType ? statusLabel(b.serviceType) : '—' }}
+              @if (b.channel) {
+                <div class="muted">{{ statusLabel(b.channel) }}</div>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let b">
+              {{ statusLabel(b.status) }}
+              @if (b.cancellationReason) {
+                <div class="muted">{{ b.cancellationReason }}</div>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="cost">
+            <th mat-header-cell *matHeaderCellDef class="num">Cost</th>
+            <td mat-cell *matCellDef="let b" class="num nowrap">
+              @if (b.actualCost != null) {
+                {{ b.actualCost | currency: 'INR' }}
+              } @else if (b.estimatedCost != null) {
+                <span class="muted">est. {{ b.estimatedCost | currency: 'INR' }}</span>
+              } @else {
+                —
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="advance">
+            <th mat-header-cell *matHeaderCellDef class="num">Advance</th>
+            <td mat-cell *matCellDef="let b" class="num nowrap">
+              {{ b.advancePaid != null ? (b.advancePaid | currency: 'INR') : '—' }}
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns"></tr>
+        </table>
+
+        <mat-paginator
+          [length]="r.rows.totalElements"
+          [pageSize]="pageSize()"
+          [pageIndex]="pageIndex()"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="onPageChange($event)"
+          showFirstLastButtons
+        ></mat-paginator>
+      </mat-card>
+    }
+  }
+</div>

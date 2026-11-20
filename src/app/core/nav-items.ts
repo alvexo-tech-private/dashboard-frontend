@@ -57,9 +57,10 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Reports',
     icon: 'summarize',
-    roles: [SUPER_ADMIN, FINANCE_ADMIN],
+    roles: [SUPER_ADMIN, FINANCE_ADMIN, OPERATIONS_ADMIN],
     children: [
-      { label: 'Finance Reports', path: 'reports/finance', description: 'Settlement and commission reports, exportable as CSV/XLSX.' },
+      { label: 'Operations Reports', path: 'reports/operations', description: 'Bookings, new registrations and workshop performance, exportable as CSV/XLSX.' },
+      { label: 'Finance Reports', path: 'reports/finance', description: 'Workshop settlement reports, exportable as CSV/XLSX.', roles: [SUPER_ADMIN, FINANCE_ADMIN] },
     ],
   },
   {

@@ -1,0 +1,228 @@
+<div class="finance-reports">
+  <div class="page-header">
+    <h1>Finance Reports</h1>
+    <p>
+      Workshop settlements by settlement date, as stored by the booking platform. Select a workshop to see the
+      bookings behind its total. Read-only.
+    </p>
+  </div>
+
+  <app-report-range [value]="range()" (changed)="onRangeChange($event)"></app-report-range>
+
+  <div class="report-toolbar">
+    <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
+      <mat-label>Settlement status</mat-label>
+      <mat-select [value]="statusFilter()" (selectionChange)="onStatusChange($event.value)">
+        <mat-option [value]="null">All statuses</mat-option>
+        @for (s of statuses; track s) {
+          <mat-option [value]="s">{{ statusLabel(s) }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (workshop(); as w) {
+      <mat-chip-set>
+        <mat-chip (removed)="clearWorkshop()">
+          Workshop: {{ w.name }}
+          <button matChipRemove aria-label="Show all workshops"><mat-icon>cancel</mat-icon></button>
+        </mat-chip>
+      </mat-chip-set>
+    }
+
+    <span class="spacer"></span>
+    <app-export-menu
+      [path]="exportPath()"
+      [range]="range()"
+      [filters]="filters()"
+      [disabled]="!current() || current()!.rows.totalElements === 0"
+    ></app-export-menu>
+  </div>
+
+  @if (current(); as c) {
+    <div class="summary-grid">
+      <div class="summary-tile">
+        <div class="value">{{ c.totals.settlements }}</div>
+        <div class="label">Settlements ({{ c.totals.workshops }} workshops)</div>
+      </div>
+      <div class="summary-tile">
+        <div class="value">{{ c.totals.advanceCollected | currency: 'INR' }}</div>
+        <div class="label">Advance collected</div>
+      </div>
+      <div class="summary-tile">
+        <div class="value">{{ c.totals.advanceHandlingFee | currency: 'INR' }}</div>
+        <div class="label">Handling fees</div>
+      </div>
+      <div class="summary-tile">
+        <div class="value">{{ c.totals.tcsDeduction | currency: 'INR' }}</div>
+        <div class="label">TCS deducted</div>
+      </div>
+      <div class="summary-tile">
+        <div class="value">{{ c.totals.finalPayout | currency: 'INR' }}</div>
+        <div class="label">Final payout to workshops</div>
+      </div>
+    </div>
+
+    <div class="status-breakdown">
+      @for (s of c.byStatus; track s.status) {
+        @if (s.count > 0) {
+          <span class="status-pill" [matTooltip]="(s.finalPayout | currency: 'INR') + ' final payout'">
+            {{ statusLabel(s.status) }} <strong>{{ s.count }}</strong>
+          </span>
+        }
+      }
+    </div>
+  }
+
+  <mat-tab-group
+    [selectedIndex]="tabIndex()"
+    (selectedIndexChange)="onTabChange($event)"
+    animationDuration="0ms"
+    mat-stretch-tabs="false"
+  >
+    <mat-tab label="By Workshop"></mat-tab>
+    <mat-tab label="Booking Lines"></mat-tab>
+  </mat-tab-group>
+
+  <div class="tab-body">
+    @if (loading()) {
+      <div class="state-panel">
+        <mat-spinner diameter="32"></mat-spinner>
+        <span>Loading settlements…</span>
+      </div>
+    } @else if (error()) {
+      <mat-card class="state-panel state-panel--error">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ error() }}</span>
+      </mat-card>
+    } @else if (current(); as c) {
+      @if (c.rows.totalElements === 0) {
+        <mat-card class="state-panel">
+          <mat-icon>account_balance</mat-icon>
+          <span>No settlements match these filters.</span>
+        </mat-card>
+      } @else {
+        <mat-card class="table-card">
+          @if (currentView() === 'by-workshop') {
+            <table mat-table [dataSource]="workshopReport()!.rows.content" class="striped-table">
+              <ng-container matColumnDef="workshop">
+                <th mat-header-cell *matHeaderCellDef>Workshop</th>
+                <td mat-cell *matCellDef="let w">{{ w.workshopName || 'Workshop #' + w.workshopId }}</td>
+              </ng-container>
+              <ng-container matColumnDef="bookings">
+                <th mat-header-cell *matHeaderCellDef class="num">Bookings</th>
+                <td mat-cell *matCellDef="let w" class="num">{{ w.bookings }}</td>
+              </ng-container>
+              <ng-container matColumnDef="advance">
+                <th mat-header-cell *matHeaderCellDef class="num">Advance</th>
+                <td mat-cell *matCellDef="let w" class="num nowrap">{{ w.advanceCollected | currency: 'INR' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="fee">
+                <th mat-header-cell *matHeaderCellDef class="num">Fee</th>
+                <td mat-cell *matCellDef="let w" class="num nowrap">{{ w.advanceHandlingFee | currency: 'INR' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="tcs">
+                <th mat-header-cell *matHeaderCellDef class="num">TCS</th>
+                <td mat-cell *matCellDef="let w" class="num nowrap">{{ w.tcsDeduction | currency: 'INR' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="payout">
+                <th mat-header-cell *matHeaderCellDef class="num">Final Payout</th>
+                <td mat-cell *matCellDef="let w" class="num nowrap">
+                  <strong>{{ w.finalPayout | currency: 'INR' }}</strong>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="paid">
+                <th mat-header-cell *matHeaderCellDef class="num">Paid</th>
+                <td mat-cell *matCellDef="let w" class="num nowrap">{{ w.paidAmount | currency: 'INR' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="outstanding">
+                <th mat-header-cell *matHeaderCellDef class="num">Outstanding</th>
+                <td mat-cell *matCellDef="let w" class="num nowrap">{{ w.outstandingAmount | currency: 'INR' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="issues">
+                <th mat-header-cell *matHeaderCellDef class="num">Failed / On Hold</th>
+                <td mat-cell *matCellDef="let w" class="num" [class.issue]="w.failedOrOnHold > 0">
+                  {{ w.failedOrOnHold }}
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="workshopColumns"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row; columns: workshopColumns"
+                class="clickable-row"
+                (click)="openWorkshop(row)"
+              ></tr>
+            </table>
+          } @else {
+            <table mat-table [dataSource]="lineReport()!.rows.content" class="striped-table">
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef>Settlement Date</th>
+                <td mat-cell *matCellDef="let l" class="nowrap">{{ l.settlementDate | date: 'd MMM y' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="workshop">
+                <th mat-header-cell *matHeaderCellDef>Workshop</th>
+                <td mat-cell *matCellDef="let l">{{ l.workshopName || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="booking">
+                <th mat-header-cell *matHeaderCellDef>Booking</th>
+                <td mat-cell *matCellDef="let l" class="nowrap">{{ l.bookingNumber || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="advance">
+                <th mat-header-cell *matHeaderCellDef class="num">Advance</th>
+                <td mat-cell *matCellDef="let l" class="num nowrap">{{ l.advanceCollected | currency: 'INR' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="fee">
+                <th mat-header-cell *matHeaderCellDef class="num">Fee</th>
+                <td mat-cell *matCellDef="let l" class="num nowrap">{{ l.advanceHandlingFee | currency: 'INR' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="tcs">
+                <th mat-header-cell *matHeaderCellDef class="num">TCS</th>
+                <td mat-cell *matCellDef="let l" class="num nowrap">{{ l.tcsDeduction | currency: 'INR' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="payout">
+                <th mat-header-cell *matHeaderCellDef class="num">Final Payout</th>
+                <td mat-cell *matCellDef="let l" class="num nowrap">
+                  <strong>{{ l.finalPayout | currency: 'INR' }}</strong>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let l">
+                  {{ statusLabel(l.status) }}
+                  @if (l.holdReason) {
+                    <div class="muted">{{ l.holdReason }}</div>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="payoutInfo">
+                <th mat-header-cell *matHeaderCellDef>Payout</th>
+                <td mat-cell *matCellDef="let l">
+                  @if (l.payoutDate) {
+                    <div class="nowrap">{{ l.payoutDate | date: 'd MMM y' }}</div>
+                  } @else if (l.expectedSettlementDate) {
+                    <div class="muted nowrap">Due {{ l.expectedSettlementDate | date: 'd MMM y' }}</div>
+                  }
+                  @if (l.payoutReference || l.gatewayPayoutId) {
+                    <div class="muted">{{ l.payoutReference || l.gatewayPayoutId }}</div>
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="lineColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: lineColumns"></tr>
+            </table>
+          }
+
+          <mat-paginator
+            [length]="c.rows.totalElements"
+            [pageSize]="pageSize()"
+            [pageIndex]="pageIndex()"
+            [pageSizeOptions]="pageSizeOptions"
+            (page)="onPageChange($event)"
+            showFirstLastButtons
+          ></mat-paginator>
+        </mat-card>
+      }
+    }
+  </div>
+</div>

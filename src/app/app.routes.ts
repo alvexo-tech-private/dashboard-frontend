@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { NAV_GROUPS } from './core/nav-items';
+import { childRoles } from './core/models/nav-item';
 import { AdminRole } from './core/models/admin-role';
 
 // Every sidenav child route defaults to the generic Placeholder component,
@@ -35,9 +36,14 @@ const moduleRoutes: Routes = NAV_GROUPS.flatMap((group) =>
             import('./features/workshops/verification-queue/verification-queue').then(
               (m) => m.VerificationQueue,
             )
+        : child.path === 'reports/operations'
+        ? () =>
+            import('./features/reports/operations-reports/operations-reports').then((m) => m.OperationsReports)
+        : child.path === 'reports/finance'
+        ? () => import('./features/reports/finance-reports/finance-reports').then((m) => m.FinanceReports)
         : () => import('./shared/placeholder/placeholder').then((m) => m.Placeholder),
     canActivate: [roleGuard],
-    data: { title: child.label, description: child.description, roles: group.roles },
+    data: { title: child.label, description: child.description, roles: childRoles(group, child) },
   }))
 );
 
