@@ -1,0 +1,51 @@
+<h2 mat-dialog-title>History: {{ data.name }}</h2>
+<mat-dialog-content class="history-dialog-content">
+  @if (loading()) {
+    <div class="history-state">
+      <mat-spinner diameter="24"></mat-spinner>
+      <span>Loading history…</span>
+    </div>
+  } @else if (error()) {
+    <div class="history-state history-state--error">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error() }}</span>
+    </div>
+  } @else if (entries().length === 0) {
+    <div class="history-state">
+      <mat-icon>history</mat-icon>
+      <span>Nothing has been recorded for this admin yet.</span>
+    </div>
+  } @else {
+    <ol class="timeline">
+      @for (entry of entries(); track entry.id) {
+        <li class="timeline-item" [class]="'timeline-item--' + action(entry).tone">
+          <mat-icon class="timeline-icon">{{ action(entry).icon }}</mat-icon>
+          <div class="timeline-body">
+            <div class="timeline-title">
+              <strong>{{ action(entry).label }}</strong>
+              @if (change(entry); as text) {
+                <span>{{ text }}</span>
+              }
+              <span class="muted">by {{ entry.performedBy }} · {{ entry.performedAt | date: 'medium' }}</span>
+            </div>
+            @if (entry.reason) {
+              <div class="timeline-reason">“{{ entry.reason }}”</div>
+            }
+          </div>
+        </li>
+      }
+    </ol>
+    @if (totalElements() > pageSize) {
+      <mat-paginator
+        [length]="totalElements()"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex()"
+        [hidePageSize]="true"
+        (page)="onPageChange($event)"
+      ></mat-paginator>
+    }
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>

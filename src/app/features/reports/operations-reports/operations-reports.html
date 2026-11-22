@@ -1,0 +1,31 @@
+<div class="operations-reports">
+  <div class="page-header">
+    <h1>Operations Reports</h1>
+    <p>Bookings, new registrations and workshop performance for a date range. Every report can be exported.</p>
+  </div>
+
+  <app-report-range [value]="range()" (changed)="onRangeChange($event)"></app-report-range>
+
+  <mat-tab-group
+    [selectedIndex]="tabIndex()"
+    (selectedIndexChange)="onTabChange($event)"
+    animationDuration="0ms"
+    mat-stretch-tabs="false"
+  >
+    <mat-tab label="Bookings">
+      <ng-template matTabContent>
+        <app-bookings-report [range]="range()"></app-bookings-report>
+      </ng-template>
+    </mat-tab>
+    <mat-tab label="New Registrations">
+      <ng-template matTabContent>
+        <app-registrations-report [range]="range()"></app-registrations-report>
+      </ng-template>
+    </mat-tab>
+    <mat-tab label="Workshop Performance">
+      <ng-template matTabContent>
+        <app-workshop-performance-report [range]="range()"></app-workshop-performance-report>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</div>

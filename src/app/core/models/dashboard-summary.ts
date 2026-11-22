@@ -11,4 +11,9 @@ export interface DashboardSummary {
   registeredSalesAgents: number;
   suspendedSalesAgents: number;
   deletedSalesAgents: number;
+  bookingsScheduledToday: number;
+  bookingsCancelledToday: number;
+  workshopsPendingSettlement: number;
+  workshopsSettledToday: number;
+  openSupportRequests: number;
 }

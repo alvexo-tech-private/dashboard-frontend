@@ -20,19 +20,21 @@
         <h1>{{ w.workshopName || '—' }}</h1>
         <p>Workshop ID {{ w.id }}</p>
       </div>
-      <mat-chip
-        class="status-chip"
-        [class.status-chip--approved]="w.accountStatus === 'ACTIVE'"
-        [class.status-chip--pending]="w.accountStatus === 'SUSPENDED'"
-        [class.status-chip--rejected]="w.accountStatus === 'DELETED'"
-      >
-        {{ w.accountStatus | titlecase }}
-      </mat-chip>
+      <div class="status-actions">
+        <app-account-status-chip [status]="w.accountStatus"></app-account-status-chip>
+        <app-account-actions
+          [userId]="w.id"
+          [status]="w.accountStatus"
+          [name]="w.workshopName || w.ownerName"
+          kind="workshop"
+          (changed)="onAccountChanged(w.id)"
+        ></app-account-actions>
+      </div>
     </div>
 
     <p class="readonly-note">
-      <mat-icon>lock</mat-icon>
-      This screen is read-only. Suspend, verify or enable/disable actions live in their own modules.
+      <mat-icon>info</mat-icon>
+      Use the ⋮ menu next to the status to suspend, restore or delete this workshop. Everything else here is read-only.
     </p>
 
     <div class="summary-grid">
@@ -144,6 +146,27 @@
           </button>
         </div>
       </mat-card>
+
     </div>
+
+    <mat-card class="summary-card section-tabs">
+      <mat-tab-group animationDuration="0ms">
+        <mat-tab label="Bookings">
+          <div class="tab-body">
+            <app-booking-history [userId]="w.id" perspective="workshop"></app-booking-history>
+          </div>
+        </mat-tab>
+        <mat-tab label="Reviews">
+          <div class="tab-body">
+            <app-review-history [userId]="w.id" perspective="workshop"></app-review-history>
+          </div>
+        </mat-tab>
+        <mat-tab label="Account History">
+          <div class="tab-body">
+            <app-account-history [userId]="w.id" [refreshKey]="historyRefresh()"></app-account-history>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card>
   }
 </div>

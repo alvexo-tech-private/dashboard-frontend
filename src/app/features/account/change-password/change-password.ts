@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -8,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../../core/services/auth.service';
-import { httpErrorMessage } from '../../../core/utils/http-error-message';
+import { apiErrorMessage } from '../../../core/utils/http-error-message';
 
 @Component({
   selector: 'app-change-password',
@@ -37,7 +38,7 @@ export class ChangePassword {
   readonly error = signal<string | null>(null);
   readonly success = signal(false);
 
-  constructor(private auth: AuthService) {}
+  constructor(protected auth: AuthService, private router: Router) {}
 
   toggleCurrentPasswordVisibility(): void {
     this.currentPasswordVisible.update((visible) => !visible);
@@ -54,12 +55,18 @@ export class ChangePassword {
   submit(): void {
     if (!this.currentPassword() || this.newPassword().length < 8 || this.mismatched) return;
 
+    const wasTemporary = this.auth.mustChangePassword();
     this.loading.set(true);
     this.error.set(null);
     this.success.set(false);
     this.auth.changePassword(this.currentPassword(), this.newPassword()).subscribe({
       next: () => {
         this.loading.set(false);
+        if (wasTemporary) {
+          // First real password chosen: let them into the portal.
+          this.router.navigate(['/dashboard']);
+          return;
+        }
         this.success.set(true);
         this.currentPassword.set('');
         this.newPassword.set('');
@@ -67,7 +74,7 @@ export class ChangePassword {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(httpErrorMessage(err, 'Current password is incorrect.'));
+        this.error.set(apiErrorMessage(err, 'Could not update your password. Please try again.'));
       },
     });
   }

@@ -1,7 +1,9 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
+import { passwordChangeGuard } from './core/guards/password-change.guard';
 import { NAV_GROUPS } from './core/nav-items';
+import { childRoles } from './core/models/nav-item';
 import { AdminRole } from './core/models/admin-role';
 
 // Every sidenav child route defaults to the generic Placeholder component,
@@ -18,6 +20,11 @@ const moduleRoutes: Routes = NAV_GROUPS.flatMap((group) =>
             import('./features/workshops/mechanics-directory/mechanics-directory').then(
               (m) => m.MechanicsDirectory,
             )
+        : child.path === 'sales-agents/directory'
+        ? () =>
+            import('./features/sales-agents/sales-agent-directory/sales-agent-directory').then(
+              (m) => m.SalesAgentDirectory,
+            )
         : child.path === 'riders/directory'
         ? () => import('./features/riders/rider-directory/rider-directory').then((m) => m.RiderDirectory)
         : child.path === 'workshops/registration-requests'
@@ -30,9 +37,16 @@ const moduleRoutes: Routes = NAV_GROUPS.flatMap((group) =>
             import('./features/workshops/verification-queue/verification-queue').then(
               (m) => m.VerificationQueue,
             )
+        : child.path === 'reports/operations'
+        ? () =>
+            import('./features/reports/operations-reports/operations-reports').then((m) => m.OperationsReports)
+        : child.path === 'settings/admin-roles'
+        ? () => import('./features/settings/admin-users/admin-users').then((m) => m.AdminUsers)
+        : child.path === 'reports/finance'
+        ? () => import('./features/reports/finance-reports/finance-reports').then((m) => m.FinanceReports)
         : () => import('./shared/placeholder/placeholder').then((m) => m.Placeholder),
     canActivate: [roleGuard],
-    data: { title: child.label, description: child.description, roles: group.roles },
+    data: { title: child.label, description: child.description, roles: childRoles(group, child) },
   }))
 );
 
@@ -45,6 +59,7 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./layout/sidenav/sidenav').then((m) => m.SideNav),
     canActivate: [authGuard],
+    canActivateChild: [passwordChangeGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
@@ -66,6 +81,19 @@ export const routes: Routes = [
         path: 'workshops/directory/:id',
         loadComponent: () =>
           import('./features/workshops/workshop-summary/workshop-summary').then((m) => m.WorkshopSummary),
+        canActivate: [roleGuard],
+        data: { roles: [AdminRole.SUPER_ADMIN, AdminRole.OPERATIONS_ADMIN] },
+      },
+      {
+        path: 'riders/directory/:id',
+        loadComponent: () => import('./features/riders/rider-detail/rider-detail').then((m) => m.RiderDetail),
+        canActivate: [roleGuard],
+        data: { roles: [AdminRole.SUPER_ADMIN, AdminRole.OPERATIONS_ADMIN] },
+      },
+      {
+        path: 'sales-agents/directory/:id',
+        loadComponent: () =>
+          import('./features/sales-agents/sales-agent-detail/sales-agent-detail').then((m) => m.SalesAgentDetail),
         canActivate: [roleGuard],
         data: { roles: [AdminRole.SUPER_ADMIN, AdminRole.OPERATIONS_ADMIN] },
       },

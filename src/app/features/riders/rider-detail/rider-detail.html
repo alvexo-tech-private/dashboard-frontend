@@ -1,0 +1,158 @@
+<div class="detail-page">
+  <button mat-button class="back-link" (click)="backToDirectory()">
+    <mat-icon>arrow_back</mat-icon>
+    Rider Directory
+  </button>
+
+  @if (loading()) {
+    <div class="state-panel">
+      <mat-spinner diameter="32"></mat-spinner>
+      <span>Loading rider…</span>
+    </div>
+  } @else if (error()) {
+    <mat-card class="state-panel state-panel--error">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error() }}</span>
+    </mat-card>
+  } @else if (rider(); as r) {
+    <div class="page-header">
+      <div>
+        <h1>{{ r.firstName }} {{ r.lastName }}</h1>
+        <p>
+          Rider ID {{ r.id }} · Registered {{ r.registeredAt | date: 'mediumDate' }}
+          @if (r.deletedAt) { · Deleted {{ r.deletedAt | date: 'mediumDate' }} }
+        </p>
+      </div>
+      <div class="status-actions">
+        <app-account-status-chip [status]="r.accountStatus"></app-account-status-chip>
+        <app-account-actions
+          [userId]="r.id"
+          [status]="r.accountStatus"
+          [name]="r.firstName + ' ' + r.lastName"
+          kind="rider"
+          (changed)="onAccountChanged()"
+        ></app-account-actions>
+      </div>
+    </div>
+
+    <p class="readonly-note">
+      <mat-icon>info</mat-icon>
+      Rider details are read-only. Use the ⋮ menu next to the status to suspend, restore or delete this account.
+    </p>
+
+    <div class="summary-grid">
+      <mat-card class="summary-card">
+        <h2>Basic Profile</h2>
+        <dl class="detail-fields">
+          <dt>Mobile Number</dt>
+          <dd>
+            <app-masked-phone [number]="r.mobileNumber"></app-masked-phone>
+            @if (r.mobileVerified) {
+              <mat-icon class="verified-icon" matTooltip="Verified">verified</mat-icon>
+            }
+          </dd>
+
+          <dt>Email</dt>
+          <dd>
+            {{ r.email || '—' }}
+            @if (r.emailVerified) {
+              <mat-icon class="verified-icon" matTooltip="Verified">verified</mat-icon>
+            }
+          </dd>
+
+          <dt>Address</dt>
+          <dd>
+            {{ address(r) || '—' }}
+          </dd>
+        </dl>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <h2>Booking Summary</h2>
+        <div class="stat-row">
+          <div class="stat-tile">
+            <span class="stat-value">{{ r.bookings.total }}</span>
+            <span class="stat-label">Total</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value">{{ r.bookings.upcoming }}</span>
+            <span class="stat-label">Upcoming</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value">{{ r.bookings.completed }}</span>
+            <span class="stat-label">Completed</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value">{{ r.bookings.cancelled }}</span>
+            <span class="stat-label">Cancelled</span>
+          </div>
+        </div>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <h2>Registered Vehicles ({{ r.vehicles.length }})</h2>
+        @if (r.vehicles.length === 0) {
+          <p class="unavailable-note">No vehicles registered.</p>
+        } @else {
+          <ul class="item-list">
+            @for (v of r.vehicles; track v.id) {
+              <li>
+                <mat-icon>two_wheeler</mat-icon>
+                <div>
+                  <div>
+                    {{ v.make }} {{ v.model }}
+                    @if (v.year) { ({{ v.year }}) }
+                    @if (v.primary) { <span class="tag">Primary</span> }
+                  </div>
+                  <div class="muted">{{ v.registrationNumber || 'No registration number' }}</div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <h2>Workshops Used</h2>
+        @if (r.workshops.length === 0) {
+          <p class="unavailable-note">No bookings with any workshop yet.</p>
+        } @else {
+          <ul class="item-list">
+            @for (w of r.workshops; track w.mechanicId) {
+              <li>
+                <mat-icon>store</mat-icon>
+                <div>
+                  <a [routerLink]="['/workshops/directory', w.mechanicId]">{{ w.workshopName || 'Workshop #' + w.mechanicId }}</a>
+                  <div class="muted">
+                    {{ w.bookings }} booking{{ w.bookings === 1 ? '' : 's' }}
+                    @if (w.lastBookingAt) { · last {{ w.lastBookingAt | date: 'mediumDate' }} }
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </mat-card>
+    </div>
+
+    <mat-card class="summary-card section-tabs">
+      <mat-tab-group animationDuration="0ms">
+        <mat-tab label="Bookings">
+          <div class="tab-body">
+            <app-booking-history [userId]="r.id" perspective="rider"></app-booking-history>
+          </div>
+        </mat-tab>
+        <mat-tab label="Reviews">
+          <div class="tab-body">
+            <app-review-history [userId]="r.id" perspective="rider"></app-review-history>
+          </div>
+        </mat-tab>
+        <mat-tab label="Account History">
+          <div class="tab-body">
+            <app-account-history [userId]="r.id" [refreshKey]="historyRefresh()"></app-account-history>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card>
+  }
+</div>

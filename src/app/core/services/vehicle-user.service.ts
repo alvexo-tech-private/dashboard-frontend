@@ -17,7 +17,8 @@ export class VehicleUserService {
       .set('size', query.size)
       .set('search', query.search)
       .set('sortBy', query.sortBy)
-      .set('sortDir', query.sortDir);
+      .set('sortDir', query.sortDir)
+      .set('status', query.status ?? 'ALL');
 
     return this.http
       .get<ApiResponse<PagedResponse<VehicleUser>>>(`${environment.apiUrl}/api/users/vehicle-users`, { params })

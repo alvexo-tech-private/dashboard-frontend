@@ -1,4 +1,6 @@
-export type AccountStatus = 'ACTIVE' | 'SUSPENDED' | 'DELETED';
+import { AccountStatus } from './account';
+
+export type { AccountStatus } from './account';
 
 export interface Mechanic {
   id: number;

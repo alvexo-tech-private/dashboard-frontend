@@ -1,0 +1,183 @@
+<div class="detail-page">
+  <button mat-button class="back-link" (click)="backToDirectory()">
+    <mat-icon>arrow_back</mat-icon>
+    Sales Agent Directory
+  </button>
+
+  @if (loading()) {
+    <div class="state-panel">
+      <mat-spinner diameter="32"></mat-spinner>
+      <span>Loading sales agent…</span>
+    </div>
+  } @else if (error()) {
+    <mat-card class="state-panel state-panel--error">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error() }}</span>
+    </mat-card>
+  } @else if (agent(); as a) {
+    <div class="page-header">
+      <div>
+        <h1>{{ a.firstName }} {{ a.lastName }}</h1>
+        <p>
+          Sales Agent ID {{ a.id }} · Registered {{ a.registeredAt | date: 'mediumDate' }}
+          @if (a.deletedAt) { · Deleted {{ a.deletedAt | date: 'mediumDate' }} }
+        </p>
+      </div>
+      <div class="status-actions">
+        <app-account-status-chip [status]="a.accountStatus"></app-account-status-chip>
+        <app-account-actions
+          [userId]="a.id"
+          [status]="a.accountStatus"
+          [name]="a.firstName + ' ' + a.lastName"
+          kind="sales agent"
+          (changed)="onAccountChanged()"
+        ></app-account-actions>
+      </div>
+    </div>
+
+    <p class="readonly-note">
+      <mat-icon>info</mat-icon>
+      Sales agent details are read-only. Use the ⋮ menu next to the status to suspend, restore or delete this account.
+    </p>
+
+    <div class="summary-grid">
+      <mat-card class="summary-card">
+        <h2>Basic Profile</h2>
+        <dl class="detail-fields">
+          <dt>Mobile Number</dt>
+          <dd><app-masked-phone [number]="a.mobileNumber"></app-masked-phone></dd>
+
+          <dt>Email</dt>
+          <dd>{{ a.email || '—' }}</dd>
+
+          <dt>Location</dt>
+          <dd>{{ a.city || '—' }}@if (a.state) {, {{ a.state }}}</dd>
+
+          <dt>Referral Code</dt>
+          <dd>{{ a.referralCode || '—' }}</dd>
+        </dl>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <h2>Referred Workshops</h2>
+        <div class="stat-row">
+          <div class="stat-tile">
+            <span class="stat-value">{{ a.referredWorkshops }}</span>
+            <span class="stat-label">Workshops referred</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value">{{ a.activeReferredWorkshops }}</span>
+            <span class="stat-label">Still active</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value">{{ a.referredOthers }}</span>
+            <span class="stat-label">Other referrals</span>
+          </div>
+        </div>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <h2>Referral Bonuses</h2>
+        <dl class="detail-fields">
+          <dt>Paid</dt>
+          <dd>{{ a.bonusPaid | currency: 'INR' : 'symbol' : '1.0-2' }}</dd>
+
+          <dt>Not yet paid</dt>
+          <dd>{{ a.bonusPending | currency: 'INR' : 'symbol' : '1.0-2' }}</dd>
+        </dl>
+        <p class="unavailable-note">
+          These are one-time referral bonuses. Weekly commission will appear here once the Finance module is built.
+        </p>
+      </mat-card>
+    </div>
+
+    <mat-card class="summary-card section-tabs">
+      <mat-tab-group animationDuration="0ms">
+        <mat-tab label="Referred Accounts">
+          <div class="tab-body">
+            @if (referralsLoading()) {
+              <div class="list-state">
+                <mat-spinner diameter="24"></mat-spinner>
+                <span>Loading referred accounts…</span>
+              </div>
+            } @else if (referralsError()) {
+              <div class="list-state list-state--error">
+                <mat-icon>error_outline</mat-icon>
+                <span>{{ referralsError() }}</span>
+              </div>
+            } @else if (referrals().length === 0) {
+              <div class="list-state">
+                <mat-icon>group_add</mat-icon>
+                <span>This sales agent hasn't referred anyone yet.</span>
+              </div>
+            } @else {
+              <div class="table-scroll">
+                <table mat-table [dataSource]="referrals()" class="striped-table">
+                  <ng-container matColumnDef="referred">
+                    <th mat-header-cell *matHeaderCellDef>Referred Account</th>
+                    <td mat-cell *matCellDef="let r">
+                      @if (referredLink(r); as link) {
+                        <a [routerLink]="link">{{ r.workshopName || r.referredName || 'Account #' + r.referredUserId }}</a>
+                      } @else {
+                        {{ r.workshopName || r.referredName || '—' }}
+                      }
+                      @if (r.workshopName && r.referredName) {
+                        <div class="muted">{{ r.referredName }}</div>
+                      }
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="type">
+                    <th mat-header-cell *matHeaderCellDef>Type</th>
+                    <td mat-cell *matCellDef="let r">{{ roleLabel(r.referredRole) }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="accountStatus">
+                    <th mat-header-cell *matHeaderCellDef>Account Status</th>
+                    <td mat-cell *matCellDef="let r">
+                      @if (r.referredAccountStatus) {
+                        <app-account-status-chip [status]="r.referredAccountStatus"></app-account-status-chip>
+                      } @else { — }
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="referredAt">
+                    <th mat-header-cell *matHeaderCellDef>Referred On</th>
+                    <td mat-cell *matCellDef="let r">{{ r.referredAt | date: 'mediumDate' }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="bonus">
+                    <th mat-header-cell *matHeaderCellDef class="num">Bonus</th>
+                    <td mat-cell *matCellDef="let r" class="num">
+                      @if (r.bonusAmount != null) {
+                        {{ r.bonusAmount | currency: 'INR' : 'symbol' : '1.0-2' }}
+                        <div class="muted">{{ r.bonusPaid ? 'Paid' : 'Not yet paid' }}</div>
+                      } @else { — }
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="referralColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: referralColumns"></tr>
+                </table>
+              </div>
+              @if (referralTotal() > referralPageSize()) {
+                <mat-paginator
+                  [length]="referralTotal()"
+                  [pageSize]="referralPageSize()"
+                  [pageIndex]="referralPage()"
+                  [hidePageSize]="true"
+                  (page)="onReferralPageChange($event)"
+                ></mat-paginator>
+              }
+            }
+          </div>
+        </mat-tab>
+        <mat-tab label="Account History">
+          <div class="tab-body">
+            <app-account-history [userId]="a.id" [refreshKey]="historyRefresh()"></app-account-history>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card>
+  }
+</div>

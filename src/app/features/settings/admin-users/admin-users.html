@@ -1,0 +1,176 @@
+<div class="admin-users">
+  <div class="page-header">
+    <div>
+      <h1>Admin Users &amp; Roles</h1>
+      <p>
+        Everyone who can sign in to the Admin Portal. Each admin sees only what their role allows. Use the ⋮ menu on a
+        row to change a role, disable access or reset a password.
+      </p>
+    </div>
+    <button mat-flat-button class="add-button" [disabled]="busyId() !== null" (click)="addAdmin()">
+      <mat-icon>person_add</mat-icon>
+      Add admin
+    </button>
+  </div>
+
+  <div class="filters">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search</mat-label>
+      <input
+        matInput
+        placeholder="Name or email"
+        [value]="searchTerm()"
+        (input)="onSearchInput($any($event.target).value)"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="role-field">
+      <mat-label>Role</mat-label>
+      <mat-select [value]="roleFilter()" (selectionChange)="onRoleFilterChange($event.value)">
+        <mat-option [value]="null">All roles</mat-option>
+        @for (r of roles; track r) {
+          <mat-option [value]="r">{{ roleLabels[r] }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-button-toggle-group
+      class="status-filter"
+      hideSingleSelectionIndicator
+      aria-label="Filter by status"
+      [value]="statusFilter()"
+      (change)="onStatusFilterChange($event.value)"
+    >
+      @for (option of statusOptions; track option.value) {
+        <mat-button-toggle [value]="option.value">{{ option.label }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+  </div>
+
+  @if (loading() && admins().length === 0) {
+    <div class="state-panel">
+      <mat-spinner diameter="32"></mat-spinner>
+      <span>Loading admin users…</span>
+    </div>
+  } @else if (error()) {
+    <mat-card class="state-panel state-panel--error">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error() }}</span>
+    </mat-card>
+  } @else if (admins().length === 0) {
+    <mat-card class="state-panel">
+      <mat-icon>admin_panel_settings</mat-icon>
+      <span>No admin users match these filters.</span>
+    </mat-card>
+  } @else {
+    <mat-card class="table-card">
+      <table mat-table [dataSource]="admins()" matSort class="striped-table" (matSortChange)="onSortChange($event)">
+        <ng-container matColumnDef="fullName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="fullName">Name</th>
+          <td mat-cell *matCellDef="let a">
+            <div class="name-line">
+              {{ a.fullName }}
+              @if (isSelf(a)) {
+                <span class="you-tag">You</span>
+              }
+            </div>
+            <div class="muted">{{ a.email }}</div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="role">Role</th>
+          <td mat-cell *matCellDef="let a">{{ roleLabel(a.role) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="status">Status</th>
+          <td mat-cell *matCellDef="let a">
+            <mat-chip
+              class="status-chip"
+              [class.status-chip--approved]="a.status === 'ACTIVE'"
+              [class.status-chip--rejected]="a.status === 'DISABLED'"
+            >
+              {{ a.status === 'ACTIVE' ? 'Active' : 'Disabled' }}
+            </mat-chip>
+            @if (a.mustChangePassword && a.status === 'ACTIVE') {
+              <div class="muted">Temporary password not changed yet</div>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="lastLoginAt">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="lastLoginAt">Last Sign-in</th>
+          <td mat-cell *matCellDef="let a">{{ a.lastLoginAt ? (a.lastLoginAt | date: 'medium') : 'Never' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="createdAt">Added On</th>
+          <td mat-cell *matCellDef="let a">{{ a.createdAt | date: 'mediumDate' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="actions-cell">
+            <span class="cdk-visually-hidden">Actions</span>
+          </th>
+          <td mat-cell *matCellDef="let a" class="actions-cell">
+            <button
+              mat-icon-button
+              [matMenuTriggerFor]="menu"
+              [disabled]="busyId() !== null"
+              matTooltip="Admin actions"
+              [attr.aria-label]="'Actions for ' + a.fullName"
+            >
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              @if (!isSelf(a)) {
+                <button mat-menu-item (click)="changeRole(a)">
+                  <mat-icon>manage_accounts</mat-icon>
+                  <span>Change role</span>
+                </button>
+                <button mat-menu-item (click)="resetPassword(a)">
+                  <mat-icon>lock_reset</mat-icon>
+                  <span>Reset password</span>
+                </button>
+                @if (a.status === 'ACTIVE') {
+                  <button mat-menu-item class="danger-item" (click)="setEnabled(a, false)">
+                    <mat-icon>block</mat-icon>
+                    <span>Disable</span>
+                  </button>
+                } @else {
+                  <button mat-menu-item (click)="setEnabled(a, true)">
+                    <mat-icon>restart_alt</mat-icon>
+                    <span>Enable</span>
+                  </button>
+                }
+              } @else {
+                <div class="menu-note">
+                  To change your own role or access, ask another Super Admin. Change your password in Account
+                  Settings.
+                </div>
+              }
+              <button mat-menu-item (click)="openHistory(a)">
+                <mat-icon>history</mat-icon>
+                <span>View history</span>
+              </button>
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" [class.disabled-row]="row.status === 'DISABLED'"></tr>
+      </table>
+
+      <mat-paginator
+        [length]="totalElements()"
+        [pageSize]="pageSize()"
+        [pageIndex]="pageIndex()"
+        [pageSizeOptions]="pageSizeOptions"
+        (page)="onPageChange($event)"
+        showFirstLastButtons
+      ></mat-paginator>
+    </mat-card>
+  }
+</div>

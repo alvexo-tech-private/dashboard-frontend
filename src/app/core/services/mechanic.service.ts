@@ -20,7 +20,8 @@ export class MechanicService {
       .set('size', query.size)
       .set('search', query.search)
       .set('sortBy', query.sortBy)
-      .set('sortDir', query.sortDir);
+      .set('sortDir', query.sortDir)
+      .set('status', query.status ?? 'ALL');
 
     return this.http.get<ApiResponse<PagedResponse<Mechanic>>>(BASE_URL, { params }).pipe(map((response) => response.data));
   }

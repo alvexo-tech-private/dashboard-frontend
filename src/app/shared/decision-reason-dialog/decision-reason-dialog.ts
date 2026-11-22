@@ -9,6 +9,10 @@ export interface DecisionReasonDialogData {
   title: string;
   label: string;
   confirmText: string;
+  /** Optional explanation shown above the reason box. */
+  message?: string;
+  /** Renders the confirm button in the error color, for irreversible actions. */
+  destructive?: boolean;
 }
 
 @Component({

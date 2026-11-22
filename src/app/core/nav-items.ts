@@ -27,15 +27,18 @@ export const NAV_GROUPS: NavGroup[] = [
     label: 'Rider Management',
     icon: 'two_wheeler',
     roles: [SUPER_ADMIN, OPERATIONS_ADMIN],
+    flat: true,
+    // Rider History (ADMIN-US-09) lives on each rider's detail page
+    // (riders/directory/:id), opened from this directory.
     children: [
-      { label: 'Directory', path: 'riders/directory', description: 'Search and view rider accounts and essential details.' },
-      { label: 'Rider History', path: 'riders/history', description: 'Vehicles, bookings, complaints and feedback for a rider.' },
+      { label: 'Directory', path: 'riders/directory', description: 'Search and view rider accounts, their vehicles, bookings and reviews.' },
     ],
   },
   {
     label: 'Sales Agent Management',
     icon: 'badge',
     roles: [SUPER_ADMIN, OPERATIONS_ADMIN],
+    flat: true,
     children: [
       { label: 'Directory', path: 'sales-agents/directory', description: 'Registration, qualification, workshop mapping and status.' },
     ],
@@ -57,9 +60,10 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Reports',
     icon: 'summarize',
-    roles: [SUPER_ADMIN, FINANCE_ADMIN],
+    roles: [SUPER_ADMIN, FINANCE_ADMIN, OPERATIONS_ADMIN],
     children: [
-      { label: 'Finance Reports', path: 'reports/finance', description: 'Settlement and commission reports, exportable as CSV/XLSX.' },
+      { label: 'Operations Reports', path: 'reports/operations', description: 'Bookings, new registrations and workshop performance, exportable as CSV/XLSX.' },
+      { label: 'Finance Reports', path: 'reports/finance', description: 'Workshop settlement reports, exportable as CSV/XLSX.', roles: [SUPER_ADMIN, FINANCE_ADMIN] },
     ],
   },
   {
@@ -73,7 +77,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Sales Agent Rules', path: 'settings/sales-agent-rules', description: 'Qualification criteria and commission rule definitions.' },
       { label: 'Platform User Status', path: 'settings/user-status', description: 'Manual suspend/reactivate for workshops and sales agents.' },
       { label: 'Notification Templates', path: 'settings/notification-templates', description: 'Content templates per event and channel (in-app, SMS, email, push).' },
-      { label: 'Admin Roles & Permissions', path: 'settings/admin-roles', description: 'Manage Super Admin, Finance Admin and Operations Admin access.' },
+      { label: 'Admin Users & Roles', path: 'settings/admin-roles', description: 'Add admins, change their role, disable access and reset passwords.' },
       { label: 'Platform Administration', path: 'settings/platform-administration', description: 'Maintenance mode and other platform-level controls.' },
       { label: 'Configuration Versioning', path: 'settings/config-versioning', description: 'Version history, operational overrides and rollback.' },
     ],

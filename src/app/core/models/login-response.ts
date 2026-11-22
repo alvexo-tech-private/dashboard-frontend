@@ -5,6 +5,8 @@ export interface AdminUserSummary {
   email: string;
   fullName: string;
   role: AdminRole;
+  /** True while the admin is on a temporary password set by a Super Admin. */
+  mustChangePassword: boolean;
 }
 
 export interface LoginResponse {

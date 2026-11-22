@@ -1,4 +1,5 @@
 import { Component, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -16,6 +17,10 @@ import { VehicleUserService } from '../../../core/services/vehicle-user.service'
 import { VehicleUser } from '../../../core/models/vehicle-user';
 import { MaskedPhone } from '../../../shared/masked-phone/masked-phone';
 import { httpErrorMessage } from '../../../core/utils/http-error-message';
+import { AccountStatusFilter as StatusFilter } from '../../../core/models/account';
+import { AccountStatusChip } from '../../../shared/account-status-chip/account-status-chip';
+import { AccountStatusFilter } from '../../../shared/account-status-filter/account-status-filter';
+import { AccountActions } from '../../../shared/account-actions/account-actions';
 
 @Component({
   selector: 'app-rider-directory',
@@ -31,6 +36,9 @@ import { httpErrorMessage } from '../../../core/utils/http-error-message';
     MatInputModule,
     MatPaginatorModule,
     MatSortModule,
+    AccountStatusChip,
+    AccountStatusFilter,
+    AccountActions,
     MaskedPhone,
   ],
   templateUrl: './rider-directory.html',
@@ -42,8 +50,11 @@ export class RiderDirectory {
     'contact',
     'city',
     'verified',
-    'active',
+    'vehicleCount',
+    'totalBookings',
+    'accountStatus',
     'createdAt',
+    'actions',
   ];
 
   readonly pageSizeOptions = [5, 10, 25, 50];
@@ -58,10 +69,14 @@ export class RiderDirectory {
   readonly searchTerm = signal('');
   readonly sortActive = signal('id');
   readonly sortDirection = signal<'asc' | 'desc'>('asc');
+  readonly statusFilter = signal<StatusFilter>('ALL');
 
   private readonly searchInput$ = new Subject<string>();
 
-  constructor(private vehicleUserService: VehicleUserService) {
+  constructor(
+    private vehicleUserService: VehicleUserService,
+    private router: Router,
+  ) {
     this.searchInput$
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
       .subscribe((term) => {
@@ -72,8 +87,24 @@ export class RiderDirectory {
     this.load();
   }
 
+  /** ADMIN-US-08 AC-06: selecting a rider opens Rider Details. */
+  viewRider(id: number): void {
+    this.router.navigate(['/riders/directory', id]);
+  }
+
   onSearchInput(value: string): void {
     this.searchInput$.next(value);
+  }
+
+  onStatusFilterChange(status: StatusFilter): void {
+    this.statusFilter.set(status);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
+  /** After a suspend / restore / delete, reload so the row (and the active filter) stay accurate. */
+  onAccountChanged(): void {
+    this.load();
   }
 
   onPageChange(event: PageEvent): void {
@@ -99,6 +130,7 @@ export class RiderDirectory {
         search: this.searchTerm(),
         sortBy: this.sortActive(),
         sortDir: this.sortDirection(),
+        status: this.statusFilter(),
       })
       .subscribe({
         next: (result) => {

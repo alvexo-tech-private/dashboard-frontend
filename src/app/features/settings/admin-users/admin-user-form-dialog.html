@@ -1,0 +1,55 @@
+<h2 mat-dialog-title>{{ title }}</h2>
+<mat-dialog-content class="dialog-content">
+  @if (data.mode === 'create') {
+    <p class="dialog-message">
+      A temporary password is created for the new admin. You'll see it once, on the next screen. They choose their
+      own password when they first sign in.
+    </p>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Full name</mat-label>
+      <input matInput name="fullName" maxlength="150" [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Work email</mat-label>
+      <input
+        matInput
+        type="email"
+        name="email"
+        maxlength="255"
+        [ngModel]="email()"
+        (ngModelChange)="email.set($event)"
+      />
+      @if (email() && !emailValid()) {
+        <mat-hint class="hint-error">Enter a valid email address.</mat-hint>
+      }
+    </mat-form-field>
+  } @else {
+    <p class="dialog-message">
+      The new role applies straight away, including to pages they already have open. Their past actions stay in the
+      audit trail under their name.
+    </p>
+  }
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Role</mat-label>
+    <mat-select name="role" [value]="role()" (selectionChange)="role.set($event.value)">
+      @for (r of roles; track r) {
+        <mat-option [value]="r">{{ roleLabels[r] }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  @if (role(); as selected) {
+    <p class="role-description">{{ roleDescriptions[selected] }}</p>
+  }
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>{{ data.mode === 'create' ? 'Note (optional)' : 'Reason' }}</mat-label>
+    <textarea matInput rows="3" name="reason" [ngModel]="reason()" (ngModelChange)="reason.set($event)"></textarea>
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-flat-button [disabled]="!valid()" (click)="confirm()">
+    {{ data.mode === 'create' ? 'Add admin' : 'Change role' }}
+  </button>
+</mat-dialog-actions>

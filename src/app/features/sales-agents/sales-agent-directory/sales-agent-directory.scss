@@ -1,0 +1,55 @@
+.page-header {
+  margin-bottom: 20px;
+
+  h1 {
+    margin: 0 0 4px;
+    color: var(--mat-sys-on-surface);
+  }
+
+  p {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.search-field {
+  width: 100%;
+  max-width: 360px;
+  margin-bottom: 16px;
+}
+
+.state-panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 32px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  box-shadow: none;
+  color: var(--mat-sys-on-surface-variant);
+
+  &--error {
+    color: var(--mat-sys-error);
+
+    mat-icon {
+      color: var(--mat-sys-error);
+    }
+  }
+}
+
+.table-card {
+  padding: 0;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  box-shadow: none;
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+  }
+}
+
+.muted {
+  font-size: 0.82rem;
+  color: var(--mat-sys-on-surface-variant);
+}

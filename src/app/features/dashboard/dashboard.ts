@@ -1,5 +1,7 @@
 import { Component, computed, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,6 +10,9 @@ import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { DashboardSummary } from '../../core/models/dashboard-summary';
 import { NAV_GROUPS } from '../../core/nav-items';
+import { AdminRole } from '../../core/models/admin-role';
+import { toIsoDate } from '../../core/utils/report-range';
+import { visibleNavGroups } from '../../core/models/nav-item';
 
 interface KpiTile {
   label: string;
@@ -15,7 +20,13 @@ interface KpiTile {
   // Maps this tile to a live count from DashboardSummary. Tiles without a
   // key stay "—" placeholders until their epic exposes real data.
   key?: keyof DashboardSummary;
+  // BR-25/26: where selecting the tile goes, with its filter applied. Only
+  // rendered as a link for roles allowed on that page.
+  link?: { path: string; query: (today: string) => Record<string, string>; roles: AdminRole[] };
+  hint?: string;
 }
+
+const ALL_ROLES = [AdminRole.SUPER_ADMIN, AdminRole.FINANCE_ADMIN, AdminRole.OPERATIONS_ADMIN];
 
 interface KpiSection {
   title: string;
@@ -24,6 +35,9 @@ interface KpiSection {
 
 /**
  * Dashboard KPI layout mirrors ADMIN-US-01 / BR-02..BR-20 in the docx.
+ * Finance tiles aren't links yet: BR-18 sends them to the Finance Dashboard
+ * (ADMIN-US-11), which isn't built, and the settlement report filters by
+ * settlement date rather than the due date these counts use.
  * Rider/Workshop registered+deleted, workshop Pickup&Drop/Advance-Payment
  * adoption, Listed/Platform Trusted counts (from approved WorkshopVerification
  * rows, ADMIN-US-06), and suspended/deleted counts for workshops and sales
@@ -62,29 +76,63 @@ const KPI_SECTIONS: KpiSection[] = [
   {
     title: 'Booking Summary',
     tiles: [
-      { label: "Today's Scheduled Bookings", icon: 'event_available' },
-      { label: "Today's Cancelled Bookings", icon: 'event_busy' },
+      {
+        label: "Today's Scheduled Bookings",
+        icon: 'event_available',
+        key: 'bookingsScheduledToday',
+        hint: 'Bookings scheduled for today, not counting cancelled or rejected ones.',
+        link: { path: '/reports/operations', query: (d) => ({ tab: 'bookings', from: d, to: d }), roles: ALL_ROLES },
+      },
+      {
+        label: "Today's Cancelled Bookings",
+        icon: 'event_busy',
+        key: 'bookingsCancelledToday',
+        hint: 'Bookings cancelled today, whatever day they were scheduled for.',
+      },
     ],
   },
   {
     title: 'Finance Summary',
     tiles: [
-      { label: 'Workshops — Pending Settlement', icon: 'hourglass_empty' },
-      { label: 'Workshops — Completed Settlement', icon: 'task_alt' },
+      {
+        label: 'Workshops — Pending Settlement',
+        icon: 'hourglass_empty',
+        key: 'workshopsPendingSettlement',
+        hint: 'Workshops with an unpaid settlement due today or earlier (awaiting payout, processing, on hold or failed).',
+      },
+      {
+        label: 'Workshops — Completed Settlement',
+        icon: 'task_alt',
+        key: 'workshopsSettledToday',
+        hint: 'Workshops paid out today.',
+      },
     ],
   },
   {
     title: 'Support Summary',
     tiles: [
-      { label: 'Open Complaints', icon: 'report_problem' },
-      { label: 'New Feedback', icon: 'rate_review' },
+      {
+        label: 'Open Support Requests',
+        icon: 'report_problem',
+        key: 'openSupportRequests',
+        hint: 'Help requests raised by workshops in the app that are open or in progress.',
+      },
+      { label: 'New Feedback', icon: 'rate_review', hint: 'Not available yet: no feedback review data exists.' },
     ],
   },
 ];
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, MatCardModule, MatIconModule, MatFormFieldModule, MatInputModule],
+  imports: [
+    NgTemplateOutlet,
+    RouterLink,
+    MatCardModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatTooltipModule,
+  ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -96,7 +144,7 @@ export class Dashboard {
   readonly quickNavCards = computed(() => {
     const role = this.auth.currentRole();
     if (!role) return [];
-    return NAV_GROUPS.filter((g) => g.roles.includes(role)).map((g) => ({
+    return visibleNavGroups(NAV_GROUPS, role).map((g) => ({
       label: g.label,
       icon: g.icon,
       path: g.children[0].path,
@@ -109,6 +157,13 @@ export class Dashboard {
       // Leave tiles at their "—" placeholder if the backend isn't reachable.
       error: () => this.summary.set(null),
     });
+  }
+
+  /** The tile's link target for the current role, or null when it shouldn't be a link. */
+  tileLink(tile: KpiTile): { path: string; query: Record<string, string> } | null {
+    const role = this.auth.currentRole();
+    if (!tile.link || !role || !tile.link.roles.includes(role)) return null;
+    return { path: tile.link.path, query: tile.link.query(toIsoDate(new Date())) };
   }
 
   tileValue(tile: KpiTile): string {
