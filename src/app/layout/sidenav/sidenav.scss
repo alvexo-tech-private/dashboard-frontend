@@ -201,6 +201,19 @@ mat-panel-title {
   }
 }
 
+// Single-page groups (Rider / Sales Agent Management) — same row treatment
+// as Dashboard, but the label may need two lines at this sidenav width.
+.flat-link {
+  height: auto !important;
+  min-height: 48px;
+
+  .mdc-list-item__primary-text {
+    white-space: normal;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+  }
+}
+
 // Nav items (the top-level Dashboard link, and every child link) render as
 // rounded rows, inset with margin rather than touching the sidenav edges —
 // matching the Modernize reference's active-row treatment.

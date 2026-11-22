@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
+import { passwordChangeGuard } from './core/guards/password-change.guard';
 import { NAV_GROUPS } from './core/nav-items';
 import { childRoles } from './core/models/nav-item';
 import { AdminRole } from './core/models/admin-role';
@@ -39,6 +40,8 @@ const moduleRoutes: Routes = NAV_GROUPS.flatMap((group) =>
         : child.path === 'reports/operations'
         ? () =>
             import('./features/reports/operations-reports/operations-reports').then((m) => m.OperationsReports)
+        : child.path === 'settings/admin-roles'
+        ? () => import('./features/settings/admin-users/admin-users').then((m) => m.AdminUsers)
         : child.path === 'reports/finance'
         ? () => import('./features/reports/finance-reports/finance-reports').then((m) => m.FinanceReports)
         : () => import('./shared/placeholder/placeholder').then((m) => m.Placeholder),
@@ -56,6 +59,7 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./layout/sidenav/sidenav').then((m) => m.SideNav),
     canActivate: [authGuard],
+    canActivateChild: [passwordChangeGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {

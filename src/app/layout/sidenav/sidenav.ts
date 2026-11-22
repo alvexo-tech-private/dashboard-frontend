@@ -53,6 +53,9 @@ export class SideNav {
 
   constructor(protected auth: AuthService, protected theme: ThemeService, private router: Router) {
     this.syncOpenGroupToRoute();
+    // Pick up role / temporary-password changes made since sign-in. Errors
+    // are handled by the auth interceptor (401 signs out).
+    this.auth.refreshProfile().subscribe({ error: () => {} });
     this.router
       .events.pipe(
         filter((event) => event instanceof NavigationEnd),

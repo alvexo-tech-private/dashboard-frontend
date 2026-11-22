@@ -12,6 +12,11 @@ export interface NavGroup {
   label: string;
   icon: string;
   roles: AdminRole[];
+  /**
+   * Render as a single sidenav link (to the first child) instead of an
+   * expandable group. Use for groups that have exactly one page.
+   */
+  flat?: boolean;
   children: NavChild[];
 }
 

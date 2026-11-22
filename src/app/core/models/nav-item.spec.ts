@@ -20,4 +20,14 @@ describe('visibleNavGroups', () => {
     expect(labels).not.toContain('Finance');
     expect(labels).not.toContain('Platform Settings');
   });
+
+  it('renders Rider and Sales Agent Management as single links to their directories', () => {
+    const groups = visibleNavGroups(NAV_GROUPS, AdminRole.OPERATIONS_ADMIN);
+    const rider = groups.find((g) => g.label === 'Rider Management')!;
+    const agent = groups.find((g) => g.label === 'Sales Agent Management')!;
+    expect(rider.flat).toBeTrue();
+    expect(rider.children.map((c) => c.path)).toEqual(['riders/directory']);
+    expect(agent.flat).toBeTrue();
+    expect(agent.children.map((c) => c.path)).toEqual(['sales-agents/directory']);
+  });
 });

@@ -1,0 +1,70 @@
+// Shared by the Add admin / Change role and temporary-password dialogs.
+.dialog-content {
+  width: min(440px, 80vw);
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.dialog-message {
+  margin: 0 0 16px;
+  color: var(--mat-sys-on-surface-variant);
+  line-height: 1.5;
+}
+
+.role-description {
+  margin: -8px 0 16px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.hint-error {
+  color: var(--mat-sys-error);
+}
+
+.credentials {
+  margin: 0 0 16px;
+
+  dt {
+    font-size: 0.8rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 2px 0 12px;
+  }
+}
+
+.password-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.password {
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--mat-sys-surface-container);
+  user-select: all;
+}
+
+.warning {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0;
+  color: #b54708;
+  font-size: 0.85rem;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}

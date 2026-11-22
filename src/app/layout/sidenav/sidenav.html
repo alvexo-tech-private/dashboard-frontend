@@ -44,28 +44,37 @@
       } @else {
         <mat-accordion class="nav-accordion" displayMode="flat">
           @for (group of navGroups(); track group.label; let i = $index) {
-            <mat-expansion-panel
-              class="nav-group"
-              [expanded]="openGroupIndex() === i"
-              (opened)="openGroupIndex.set(i)"
-              hideToggle
-            >
-              <mat-expansion-panel-header>
-                <mat-panel-title>
-                  <mat-icon class="group-icon">{{ group.icon }}</mat-icon>
-                  <span class="group-label">{{ group.label }}</span>
-                  <mat-icon class="chevron">expand_more</mat-icon>
-                </mat-panel-title>
-              </mat-expansion-panel-header>
+            @if (group.flat) {
+              <!-- Single-page group: plain link, no expand/collapse. Stays
+                   active on its detail pages (e.g. riders/directory/:id). -->
+              <a mat-list-item class="flat-link" routerLinkActive="active-link" [routerLink]="'/' + group.children[0].path">
+                <mat-icon matListItemIcon>{{ group.icon }}</mat-icon>
+                <span matListItemTitle>{{ group.label }}</span>
+              </a>
+            } @else {
+              <mat-expansion-panel
+                class="nav-group"
+                [expanded]="openGroupIndex() === i"
+                (opened)="openGroupIndex.set(i)"
+                hideToggle
+              >
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon class="group-icon">{{ group.icon }}</mat-icon>
+                    <span class="group-label">{{ group.label }}</span>
+                    <mat-icon class="chevron">expand_more</mat-icon>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
 
-              <mat-nav-list class="nav-group-children">
-                @for (child of group.children; track child.path) {
-                  <a mat-list-item routerLinkActive="active-link" [routerLink]="'/' + child.path">
-                    <span matListItemTitle>{{ child.label }}</span>
-                  </a>
-                }
-              </mat-nav-list>
-            </mat-expansion-panel>
+                <mat-nav-list class="nav-group-children">
+                  @for (child of group.children; track child.path) {
+                    <a mat-list-item routerLinkActive="active-link" [routerLink]="'/' + child.path">
+                      <span matListItemTitle>{{ child.label }}</span>
+                    </a>
+                  }
+                </mat-nav-list>
+              </mat-expansion-panel>
+            }
           }
         </mat-accordion>
       }

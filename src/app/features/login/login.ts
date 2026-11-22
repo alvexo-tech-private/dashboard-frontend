@@ -47,7 +47,7 @@ export class Login {
     this.auth.login(this.email().trim(), this.password()).subscribe({
       next: () => {
         this.loading.set(false);
-        this.router.navigate(['/dashboard']);
+        this.router.navigate([this.auth.mustChangePassword() ? '/account/settings' : '/dashboard']);
       },
       error: (err) => {
         this.loading.set(false);
