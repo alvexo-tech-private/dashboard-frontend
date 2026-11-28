@@ -24,9 +24,12 @@ interface KpiTile {
   // rendered as a link for roles allowed on that page.
   link?: { path: string; query: (today: string) => Record<string, string>; roles: AdminRole[] };
   hint?: string;
+  /** Show the value as rupees (₹1,23,456) instead of a count. */
+  currency?: boolean;
 }
 
 const ALL_ROLES = [AdminRole.SUPER_ADMIN, AdminRole.FINANCE_ADMIN, AdminRole.OPERATIONS_ADMIN];
+const FINANCE_ROLES = [AdminRole.SUPER_ADMIN, AdminRole.FINANCE_ADMIN];
 
 interface KpiSection {
   title: string;
@@ -94,17 +97,36 @@ const KPI_SECTIONS: KpiSection[] = [
   {
     title: 'Finance Summary',
     tiles: [
+      // Finance Summary tiles open the Finance pages (Finance Admin / Super Admin).
+      {
+        label: "Today's Customer Payments",
+        icon: 'payments',
+        key: 'paymentsToday',
+        currency: true,
+        hint: 'Rider payments captured through Cashfree today.',
+        link: { path: '/finance/dashboard', query: () => ({}), roles: FINANCE_ROLES },
+      },
+      {
+        label: "Today's Refunds",
+        icon: 'currency_exchange',
+        key: 'refundsToday',
+        currency: true,
+        hint: 'Refunds completed by Cashfree today.',
+        link: { path: '/finance/dashboard', query: () => ({}), roles: FINANCE_ROLES },
+      },
       {
         label: 'Workshops — Pending Settlement',
         icon: 'hourglass_empty',
         key: 'workshopsPendingSettlement',
         hint: 'Workshops with an unpaid settlement due today or earlier (awaiting payout, processing, on hold or failed).',
+        link: { path: '/finance/settlement-summary', query: () => ({}), roles: FINANCE_ROLES },
       },
       {
         label: 'Workshops — Completed Settlement',
         icon: 'task_alt',
         key: 'workshopsSettledToday',
         hint: 'Workshops paid out today.',
+        link: { path: '/finance/settlement-summary', query: () => ({}), roles: FINANCE_ROLES },
       },
     ],
   },
@@ -169,6 +191,9 @@ export class Dashboard {
   tileValue(tile: KpiTile): string {
     const summary = this.summary();
     if (!tile.key || !summary) return '—';
-    return summary[tile.key].toLocaleString();
+    const value = Number(summary[tile.key] ?? 0);
+    return tile.currency
+      ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(value)
+      : value.toLocaleString('en-IN');
   }
 }

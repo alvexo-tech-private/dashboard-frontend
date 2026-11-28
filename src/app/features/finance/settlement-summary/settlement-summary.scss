@@ -1,0 +1,22 @@
+@use '../finance' as *;
+
+.content-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  .list-column { flex: 2 1 560px; min-width: 0; }
+  .detail-column { flex: 1 1 420px; min-width: 340px; position: sticky; top: 16px; }
+}
+
+.inner-table { width: 100%; }
+.link { color: var(--mat-sys-primary); cursor: pointer; font-weight: 600; text-decoration: underline; }
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}

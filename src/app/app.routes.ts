@@ -44,6 +44,12 @@ const moduleRoutes: Routes = NAV_GROUPS.flatMap((group) =>
         ? () => import('./features/settings/admin-users/admin-users').then((m) => m.AdminUsers)
         : child.path === 'reports/finance'
         ? () => import('./features/reports/finance-reports/finance-reports').then((m) => m.FinanceReports)
+        : child.path === 'finance/dashboard'
+        ? () => import('./features/finance/finance-dashboard/finance-dashboard').then((m) => m.FinanceDashboard)
+        : child.path === 'finance/booking-breakdown'
+        ? () => import('./features/finance/booking-breakdown/booking-breakdown').then((m) => m.BookingBreakdown)
+        : child.path === 'finance/settlement-summary'
+        ? () => import('./features/finance/settlement-summary/settlement-summary').then((m) => m.SettlementSummary)
         : () => import('./shared/placeholder/placeholder').then((m) => m.Placeholder),
     canActivate: [roleGuard],
     data: { title: child.label, description: child.description, roles: childRoles(group, child) },

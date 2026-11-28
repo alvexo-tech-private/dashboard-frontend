@@ -1,0 +1,200 @@
+@use '../finance' as *;
+
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.period-field {
+  width: 210px;
+  margin-bottom: -1.25em;
+  mat-icon { margin: 0 6px 0 10px; color: var(--mat-sys-on-surface-variant); }
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  padding: 18px 18px 14px;
+  border-radius: 16px;
+  box-shadow: $card-shadow;
+  --tone: #2563eb;
+  --tone-soft: #e8efff;
+  &.tone-purple { --tone: #7c3aed; --tone-soft: #f1eaff; }
+  &.tone-green { --tone: #16a34a; --tone-soft: #e7f6ec; }
+  &.tone-orange { --tone: #f97316; --tone-soft: #fff1e6; }
+
+  .stat-top { display: flex; align-items: center; gap: 12px; }
+  .stat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--tone);
+    color: #fff;
+    mat-icon { font-size: 24px; width: 24px; height: 24px; }
+  }
+  .stat-label { font-size: 0.95rem; font-weight: 600; color: var(--mat-sys-on-surface); }
+  .stat-amount { font-size: 1.85rem; font-weight: 800; margin: 12px 0 6px; color: var(--mat-sys-on-surface);
+                 font-variant-numeric: tabular-nums; }
+  .stat-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; min-height: 36px; }
+  .change {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #16a34a;
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    .muted { font-weight: 400; margin-left: 4px; }
+    &.down { color: #dc2626; }
+  }
+  .spark { width: 120px; height: 36px; flex-shrink: 0; polyline { stroke: var(--tone); } }
+}
+
+.tx-card {
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: $card-shadow;
+}
+
+.tx-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  h2 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 1.2rem; font-weight: 700; }
+  h2 mat-icon { color: var(--mat-sys-primary); }
+}
+
+th.mat-mdc-header-cell { background: var(--mat-sys-surface-container); font-weight: 700; }
+td.chevron { width: 32px; color: var(--mat-sys-on-surface-variant); }
+
+.tx-status {
+  display: inline-block;
+  padding: 3px 14px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+  background: #eef2f6;
+  color: #475467;
+  &.PAID { background: #e7f6ec; color: #15803d; }
+  &.TO_BE_PAID { background: #fff1e0; color: #ea580c; }
+  &.REFUNDED { background: #f1eaff; color: #7c3aed; }
+  &.REFUND_PROCESSING { background: #e8efff; color: #2563eb; }
+  &.NO_PAYMENT { background: #f2f4f7; color: #667085; }
+}
+
+.updated {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #bbe5c8;
+  background: #effaf2;
+  color: #166534;
+  font-size: 0.9rem;
+  mat-icon { color: #16a34a; }
+}
+
+// Filter bar: every control 48px high and centred on one line (wraps on narrow screens).
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-low);
+
+  .filter-field {
+    width: 210px;
+    --mat-form-field-container-height: 48px;
+    --mat-form-field-container-vertical-padding: 12px;
+    --mdc-outlined-text-field-container-shape: 10px;
+    ::ng-deep .mat-mdc-form-field-infix { min-height: 48px; }
+    mat-icon[matPrefix] { margin: 0 4px 0 10px; color: var(--mat-sys-on-surface-variant); font-size: 20px; width: 20px; height: 20px; }
+  }
+
+  .filter-btn {
+    height: 48px;
+    border-radius: 10px;
+    padding: 0 18px;
+  }
+
+  .status-toggle {
+    margin-left: auto;
+    height: 48px;
+    align-items: center;
+    ::ng-deep .mat-button-toggle-label-content { line-height: 46px; }
+  }
+}
+
+.filter-note { margin: 0 0 8px 4px; }
+
+.reason { margin-top: 2px; font-size: 0.75rem; }
+
+// Cashfree ids: payment id (and refund id when refunded), small monospace with a tag.
+.cf-ids { white-space: nowrap; }
+.cf-line { display: flex; align-items: center; gap: 6px; line-height: 1.6; }
+.cf-line .mono { font-size: 0.78rem; }
+.cf-tag {
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+  &.pay { background: #e8efff; color: #2563eb; }
+  &.ref { background: #f1eaff; color: #7c3aed; }
+}
+
+// ── Transactions table: one line per cell, even rows, aligned columns ──
+.tx-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  th.mat-mdc-header-cell {
+    white-space: nowrap;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--mat-sys-on-surface-variant);
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+  }
+
+  td.mat-mdc-cell {
+    padding: 10px 14px;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+  }
+
+  tr.mat-mdc-row { height: 60px; }
+  tr.mat-mdc-row:nth-child(even) td { background: var(--mat-sys-surface-container-lowest, transparent); }
+  tr.clickable:hover td { background: var(--mat-sys-surface-container-high); }
+
+  .col-booking { font-weight: 700; white-space: nowrap; color: var(--mat-sys-on-surface); }
+  .col-amount { font-weight: 700; }
+  .nowrap { white-space: nowrap; }
+  .ellipsis { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sub { font-size: 0.74rem; color: var(--mat-sys-on-surface-variant); margin-top: 2px; white-space: nowrap; }
+
+  td.chevron { width: 28px; padding-left: 0; padding-right: 8px; }
+  td.chevron mat-icon { vertical-align: middle; }
+}
