@@ -1,0 +1,96 @@
+// Shared look for the Finance pages (ADMIN-EPIC-06), matching the existing module pages.
+$card-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+
+.page-header {
+  margin-bottom: 24px;
+  h1 { margin: 0 0 4px; font-size: 1.5rem; font-weight: 700; color: var(--mat-sys-on-surface); }
+  p { margin: 0; font-size: 0.88rem; color: var(--mat-sys-on-surface-variant); }
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.date-field, .search-field {
+  width: 100%;
+  max-width: 260px;
+  margin-bottom: -1.25em;
+}
+
+mat-button-toggle-group { border-radius: 999px; overflow: hidden; }
+
+.state-panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  color: var(--mat-sys-on-surface-variant);
+  box-shadow: $card-shadow;
+  &--error { color: var(--mat-sys-error); }
+}
+
+.table-card { padding: 0; overflow: hidden; box-shadow: $card-shadow; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; }
+tr.clickable { cursor: pointer; }
+tr.clickable:hover td { background: var(--mat-sys-surface-container-high); }
+tr.selected td { background: var(--mat-sys-secondary-container); }
+td.amount, th.amount { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.muted { color: var(--mat-sys-on-surface-variant); font-size: 0.8rem; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; }
+
+.status-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  background: #eef2f6;
+  color: #475467;
+  &.PENDING, &.AWAITING_PAYOUT, &.PROCESSING { background: #fff4e5; color: #b54708; }
+  &.COMPLETED, &.PAID, &.REFUNDED { background: #e7f6ec; color: #067647; }
+  &.FAILED, &.EXCEPTION, &.ON_HOLD { background: #fdecec; color: #b42318; }
+}
+
+.detail-card {
+  padding: 20px;
+  box-shadow: $card-shadow;
+  h2 { margin: 0 0 4px; font-size: 1.1rem; font-weight: 700; }
+  h3 { margin: 20px 0 8px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase;
+       letter-spacing: 0.04em; color: var(--mat-sys-on-surface-variant); }
+}
+
+dl.kv {
+  display: grid;
+  grid-template-columns: minmax(140px, max-content) 1fr;
+  gap: 6px 16px;
+  margin: 0;
+  dt { color: var(--mat-sys-on-surface-variant); font-size: 0.85rem; }
+  dd { margin: 0; font-size: 0.9rem; word-break: break-word; }
+}
+
+.exception-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fdecec;
+  color: #b42318;
+  font-size: 0.88rem;
+  margin-bottom: 12px;
+}
+
+.history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  li { padding: 8px 0; border-bottom: 1px solid var(--mat-sys-outline-variant); font-size: 0.85rem; }
+  li:last-child { border-bottom: none; }
+}

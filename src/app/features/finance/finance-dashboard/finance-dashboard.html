@@ -1,0 +1,183 @@
+<div class="finance-dashboard">
+  <div class="header-row">
+    <div class="page-header">
+      <h1>Finance Dashboard</h1>
+      <p>Payments · Settlements · Refunds</p>
+    </div>
+    <mat-form-field appearance="outline" class="period-field">
+      <mat-icon matPrefix>calendar_month</mat-icon>
+      <mat-select [value]="periodDays()" (selectionChange)="onPeriodChange($event.value)">
+        @for (p of periods; track p.days) {
+          <mat-option [value]="p.days">{{ p.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (loading() && !overview()) {
+    <div class="state-panel"><mat-spinner diameter="32"></mat-spinner><span>Loading…</span></div>
+  } @else if (error()) {
+    <mat-card class="state-panel state-panel--error"><mat-icon>error_outline</mat-icon><span>{{ error() }}</span></mat-card>
+  } @else if (overview(); as o) {
+    <div class="cards">
+      @for (c of cards(); track c.key) {
+        <mat-card class="stat-card" [class]="'tone-' + c.tone">
+          <div class="stat-top">
+            <span class="stat-icon"><mat-icon>{{ c.icon }}</mat-icon></span>
+            <span class="stat-label">{{ c.label }}</span>
+          </div>
+          <div class="stat-amount">{{ c.card.amount | currency: 'INR' : 'symbol' : '1.0-2' : 'en-IN' }}</div>
+          <div class="stat-bottom">
+            <span class="change" [class.down]="(c.card.changePercent ?? 0) < 0">
+              @if (c.card.changePercent === null) {
+                <span class="muted">{{ c.card.count }} in period</span>
+              } @else {
+                <mat-icon>{{ c.card.changePercent < 0 ? 'arrow_downward' : 'arrow_upward' }}</mat-icon>
+                {{ (c.card.changePercent < 0 ? -c.card.changePercent : c.card.changePercent) | number: '1.0-1' }}%
+                <span class="muted">vs previous period</span>
+              }
+            </span>
+            <svg class="spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
+              <polyline [attr.points]="sparkline(c.card.trend)" fill="none" stroke-width="2.2"
+                        stroke-linejoin="round" stroke-linecap="round" />
+            </svg>
+          </div>
+        </mat-card>
+      }
+    </div>
+
+    <mat-card class="tx-card">
+      <div class="tx-head">
+        <h2><mat-icon>format_list_bulleted</mat-icon> {{ filtersActive() ? 'Filtered Transactions' : showAll() ? 'All Transactions' : 'Recent Transactions' }}</h2>
+        <button mat-stroked-button (click)="toggleAll()">
+          {{ showAll() ? 'Show recent' : 'View All' }} <mat-icon iconPositionEnd>{{ showAll() ? 'arrow_back' : 'arrow_forward' }}</mat-icon>
+        </button>
+      </div>
+
+      <div class="filters">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-field">
+          <mat-icon matPrefix>tag</mat-icon>
+          <mat-label>Booking / Cashfree ID</mat-label>
+          <input matInput placeholder="1888-TN-0017 or Cashfree ID" [value]="bookingIdInput()"
+                 (input)="bookingIdInput.set($any($event.target).value)" (keyup.enter)="search()" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-field">
+          <mat-icon matPrefix>person</mat-icon>
+          <mat-label>Customer name</mat-label>
+          <input matInput placeholder="e.g. Rohit" [value]="customerInput()"
+                 (input)="customerInput.set($any($event.target).value)" (keyup.enter)="search()" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-field">
+          <mat-icon matPrefix>storefront</mat-icon>
+          <mat-label>Workshop</mat-label>
+          <input matInput placeholder="Name or WS-3" [value]="workshopInput()"
+                 (input)="workshopInput.set($any($event.target).value)" (keyup.enter)="search()" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-field">
+          <mat-label>Payment date</mat-label>
+          <input matInput readonly [matDatepicker]="picker" placeholder="Any date" [value]="paymentDateFilter()"
+                 (dateChange)="onDateChange($event.value)" (click)="picker.open()" />
+          @if (paymentDateFilter()) {
+            <button mat-icon-button matIconSuffix aria-label="Clear date" (click)="clearDate(); $event.stopPropagation()">
+              <mat-icon>close</mat-icon>
+            </button>
+          } @else {
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          }
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+        <button mat-flat-button class="filter-btn" (click)="search()"><mat-icon>search</mat-icon> Search</button>
+        @if (filtersActive()) {
+          <button mat-stroked-button class="filter-btn" (click)="clearFilters()"><mat-icon>filter_alt_off</mat-icon> Clear</button>
+        }
+        <mat-button-toggle-group class="status-toggle" [value]="statusFilter()" (change)="onStatusChange($event.value)">
+          <mat-button-toggle value="ALL">All</mat-button-toggle>
+          <mat-button-toggle value="PAID">Paid</mat-button-toggle>
+          <mat-button-toggle value="TO_BE_PAID">To be paid</mat-button-toggle>
+          <mat-button-toggle value="REFUNDED">Refunded</mat-button-toggle>
+          <mat-button-toggle value="NO_PAYMENT">No payment</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+      @if (filtersActive()) {
+        <p class="muted filter-note">
+          {{ allTotal() }} matching payment(s){{ paymentDateFilter() ? ' on ' + (paymentDateFilter() | date: 'd MMM y') : ' in the selected period' }}.
+        </p>
+      }
+
+      @let rows = listMode() ? allRows() : o.recentTransactions;
+      @if (listMode() && allLoading()) {
+        <div class="state-panel"><mat-spinner diameter="28"></mat-spinner><span>Loading…</span></div>
+      } @else if (rows.length === 0) {
+        <div class="state-panel"><mat-icon>inbox</mat-icon><span>{{ filtersActive() ? 'No payments match these filters.' : 'No payments in this period.' }}</span></div>
+      } @else {
+        <div class="table-scroll">
+          <table mat-table [dataSource]="rows" class="tx-table">
+            <ng-container matColumnDef="booking">
+              <th mat-header-cell *matHeaderCellDef>Booking ID</th>
+              <td mat-cell *matCellDef="let r" class="col-booking">{{ r.bookingNumber || ('#' + r.bookingId) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="customer">
+              <th mat-header-cell *matHeaderCellDef>Customer</th>
+              <td mat-cell *matCellDef="let r"><div class="ellipsis" [title]="r.customerName || ''">{{ r.customerName || '—' }}</div></td>
+            </ng-container>
+            <ng-container matColumnDef="workshop">
+              <th mat-header-cell *matHeaderCellDef>Workshop</th>
+              <td mat-cell *matCellDef="let r">
+                <div class="ellipsis" [title]="r.workshopName || ''">{{ r.workshopName || '—' }}</div>
+                <div class="sub">WS-{{ r.workshopId }}</div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="paymentDate">
+              <th mat-header-cell *matHeaderCellDef>Date</th>
+              <td mat-cell *matCellDef="let r" class="nowrap">
+                {{ r.paymentDate | date: 'dd MMM y' }}
+                <div class="sub">{{ r.paymentDate | date: 'h:mm a' }}</div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="amount">
+              <th mat-header-cell *matHeaderCellDef class="amount">Amount</th>
+              <td mat-cell *matCellDef="let r" class="amount col-amount">{{ r.amount | currency: 'INR' : 'symbol' : '1.0-2' : 'en-IN' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="cashfree">
+              <th mat-header-cell *matHeaderCellDef>Cashfree ID</th>
+              <td mat-cell *matCellDef="let r" class="cf-ids">
+                @if (r.cashfreePaymentId || r.orderId) {
+                  <div class="cf-line" [title]="'Cashfree order ' + (r.orderId || '—')">
+                    <span class="cf-tag pay">PAY</span><span class="mono">{{ r.cashfreePaymentId || r.orderId }}</span>
+                  </div>
+                  @if (r.cashfreeRefundId) {
+                    <div class="cf-line"><span class="cf-tag ref">REF</span><span class="mono">{{ r.cashfreeRefundId }}</span></div>
+                  }
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let r" class="nowrap">
+                <span class="tx-status" [class]="r.status">{{ statusLabel(r.status) }}</span>
+                @if (r.status === 'NO_PAYMENT') { <div class="muted reason">{{ noPaymentReason(r.detailedStatus) }}</div> }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="open">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let r" class="chevron"><mat-icon>chevron_right</mat-icon></td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="columns"></tr>
+            <tr mat-row *matRowDef="let row; columns: columns" class="clickable" (click)="open(row)"></tr>
+          </table>
+        </div>
+        @if (listMode()) {
+          <mat-paginator [length]="allTotal()" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+                         [pageSizeOptions]="[10, 25, 50]" (page)="onPage($event)"></mat-paginator>
+        }
+      }
+
+      <div class="updated">
+        <mat-icon>check_circle</mat-icon>
+        <span><strong>Up to date.</strong> Last updated: {{ o.lastUpdated | date: 'd MMM y, HH:mm' }}</span>
+      </div>
+    </mat-card>
+  }
+</div>

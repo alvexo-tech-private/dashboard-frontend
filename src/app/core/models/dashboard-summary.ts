@@ -15,5 +15,10 @@ export interface DashboardSummary {
   bookingsCancelledToday: number;
   workshopsPendingSettlement: number;
   workshopsSettledToday: number;
+  /** ₹ captured through Cashfree today. */
+  paymentsToday: number;
+  paymentCountToday: number;
+  /** ₹ refunded by Cashfree today. */
+  refundsToday: number;
   openSupportRequests: number;
 }

@@ -1,0 +1,108 @@
+<div class="booking-breakdown">
+  <div class="page-header">
+    <h1>Booking Financial Breakdown</h1>
+    <p>Payment, platform charges, refund and workshop settlement of one booking. Refunds happen automatically through Cashfree under the cancellation rules — there is no refund action here.</p>
+  </div>
+
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Booking ID</mat-label>
+      <input matInput placeholder="e.g. 1888-TN-0017" [value]="query()" (keyup.enter)="onSearch($any($event.target).value)" #box />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <button mat-flat-button (click)="onSearch(box.value)">Open</button>
+  </div>
+
+  @if (loading()) {
+    <div class="state-panel"><mat-spinner diameter="32"></mat-spinner><span>Loading…</span></div>
+  } @else if (error()) {
+    <mat-card class="state-panel state-panel--error"><mat-icon>error_outline</mat-icon><span>{{ error() }}</span></mat-card>
+  } @else if (data(); as d) {
+    @if (d.exception) {
+      <div class="exception-banner"><mat-icon>report</mat-icon><span>{{ d.exception }}</span></div>
+    }
+    <div class="grid">
+      <mat-card class="detail-card">
+        <h2>{{ d.bookingNumber || ('#' + d.bookingId) }}</h2>
+        <p class="muted">Booking status: {{ d.bookingStatus }}{{ d.serviceDate ? ' · service ' : '' }}{{ d.serviceDate | date: 'd MMM y' }}</p>
+        <dl class="kv">
+          <dt>Rider</dt><dd>{{ d.rider.name || '—' }}</dd>
+          <dt>Workshop</dt><dd>{{ d.workshop.name || '—' }} <span class="muted">{{ d.workshop.code }}{{ d.workshop.area ? ' · ' + d.workshop.area : '' }}</span></dd>
+        </dl>
+      </mat-card>
+
+      <mat-card class="detail-card">
+        <h3 class="first">Payment</h3>
+        @if (d.payment; as p) {
+          <dl class="kv">
+            <dt>Status</dt><dd><span class="status-chip" [class]="p.status">{{ p.status }}</span></dd>
+            <dt>Advance</dt><dd>{{ p.advance | currency: 'INR' : 'symbol' : '1.2-2' }}</dd>
+            <dt>Platform fee</dt><dd>{{ p.platformFee | currency: 'INR' : 'symbol' : '1.2-2' }}</dd>
+            <dt>Total paid</dt><dd><strong>{{ p.gross | currency: 'INR' : 'symbol' : '1.2-2' }}</strong></dd>
+            <dt>Paid on</dt><dd>{{ p.paymentDate | date: 'd MMM y, h:mm a' }}</dd>
+            <dt>Method</dt><dd>{{ p.method || '—' }}</dd>
+            <dt>Cashfree order ID</dt><dd class="mono">{{ p.orderId }}</dd>
+            <dt>Cashfree payment ID</dt><dd class="mono">{{ p.cashfreePaymentId || '—' }}</dd>
+          </dl>
+        } @else {
+          <p class="muted">No payment was made for this booking.</p>
+        }
+      </mat-card>
+
+      @if (d.charges; as c) {
+        <mat-card class="detail-card">
+          <h3 class="first">Platform charges</h3>
+          <dl class="kv">
+            <dt>Handling fee</dt><dd>{{ c.handlingFee === null ? 'After the service' : (c.handlingFee | currency: 'INR' : 'symbol' : '1.2-2') }}</dd>
+            <dt>TCS</dt><dd>{{ c.tcs === null ? 'After the service' : (c.tcs | currency: 'INR' : 'symbol' : '1.2-2') }}</dd>
+            <dt>Workshop share</dt><dd>{{ c.workshopShare === null ? 'After the service' : (c.workshopShare | currency: 'INR' : 'symbol' : '1.2-2') }}</dd>
+            <dt>BYK commission</dt><dd>{{ c.bykCommission | currency: 'INR' : 'symbol' : '1.2-2' }}</dd>
+            <dt>Gateway charges</dt><dd>{{ c.gatewayCharges === null ? 'Not reconciled yet' : (c.gatewayCharges | currency: 'INR' : 'symbol' : '1.2-2') }}</dd>
+          </dl>
+        </mat-card>
+      }
+
+      <mat-card class="detail-card">
+        <h3 class="first">Refund</h3>
+        @if (d.refunds.length === 0) {
+          <p class="muted">{{ d.bookingStatus === 'CANCELLED' ? 'Cancelled without a refund (not eligible under the cancellation rules).' : 'No refund.' }}</p>
+        } @else {
+          @for (r of d.refunds; track $index) {
+            <dl class="kv refund">
+              <dt>Status</dt><dd><span class="status-chip" [class]="r.status">{{ r.status }}</span></dd>
+              <dt>Amount</dt><dd>{{ r.amount | currency: 'INR' : 'symbol' : '1.2-2' }}</dd>
+              <dt>Reason</dt><dd>{{ r.reason }}</dd>
+              <dt>Initiated</dt><dd>{{ r.initiatedAt | date: 'd MMM y, h:mm a' }}</dd>
+              <dt>Completed</dt><dd>{{ r.completedAt ? (r.completedAt | date: 'd MMM y, h:mm a') : '—' }}</dd>
+              <dt>Cashfree refund ID</dt><dd class="mono">{{ r.cashfreeRefundId || '—' }}</dd>
+              @if (r.lastError) { <dt>Gateway message</dt><dd>{{ r.lastError }}</dd> }
+            </dl>
+          }
+        }
+      </mat-card>
+
+      <mat-card class="detail-card">
+        <h3 class="first">Workshop settlement</h3>
+        @if (d.settlement; as s) {
+          <dl class="kv">
+            <dt>Status</dt><dd><span class="status-chip" [class]="s.status">{{ s.status }}</span></dd>
+            <dt>Amount</dt><dd><strong>{{ s.amount | currency: 'INR' : 'symbol' : '1.2-2' }}</strong></dd>
+            <dt>Settlement date</dt><dd>{{ s.settlementDate | date: 'd MMM y' }}</dd>
+            @if (s.batchReference) {
+              <dt>Settlement batch</dt><dd><a class="link mono" (click)="openBatch()">{{ s.batchReference }}</a> <span class="status-chip" [class]="s.batchStatus">{{ s.batchStatus }}</span></dd>
+            } @else {
+              <dt>Holding until</dt><dd>{{ s.expectedDate ? (s.expectedDate | date: 'd MMM y') : '—' }}</dd>
+            }
+            <dt>Payout reference</dt><dd class="mono">{{ s.payoutReference || '—' }}</dd>
+            <dt>Gateway reference</dt><dd class="mono">{{ s.gatewayReference || '—' }}</dd>
+            @if (s.holdReason) { <dt>Hold reason</dt><dd>{{ s.holdReason }}</dd> }
+          </dl>
+        } @else {
+          <p class="muted">{{ d.bookingStatus === 'CANCELLED' ? 'Cancelled bookings are not settled to the workshop.' : 'Settled after the service is completed.' }}</p>
+        }
+      </mat-card>
+    </div>
+  } @else {
+    <mat-card class="state-panel"><mat-icon>receipt_long</mat-icon><span>Enter a Booking ID to see its financial details.</span></mat-card>
+  }
+</div>

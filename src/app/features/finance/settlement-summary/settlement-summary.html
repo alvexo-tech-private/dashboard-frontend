@@ -1,0 +1,169 @@
+<div class="settlement-summary">
+  <div class="page-header">
+    <h1>Workshop Settlement Summary</h1>
+    <p>Each workshop's consolidated settlement batch for the date and the bookings in it. Amounts come from the platform and payment gateway and can't be edited.</p>
+  </div>
+
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="date-field">
+      <mat-label>Settlement date</mat-label>
+      <input matInput type="date" [value]="date()" (change)="onDateChange($any($event.target).value)" />
+    </mat-form-field>
+    <mat-button-toggle-group [value]="statusFilter()" (change)="onStatusChange($event.value)">
+      <mat-button-toggle value="ALL">All</mat-button-toggle>
+      <mat-button-toggle value="PENDING">Pending</mat-button-toggle>
+      <mat-button-toggle value="PROCESSING">Processing</mat-button-toggle>
+      <mat-button-toggle value="COMPLETED">Completed</mat-button-toggle>
+      <mat-button-toggle value="FAILED">Failed</mat-button-toggle>
+      <mat-button-toggle value="EXCEPTION">Exception</mat-button-toggle>
+    </mat-button-toggle-group>
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search</mat-label>
+      <input matInput placeholder="Workshop name, ID or batch" [value]="search()" (change)="onSearch($any($event.target).value)" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+  </div>
+
+  <div class="content-layout">
+    <div class="list-column">
+      @if (loading()) {
+        <div class="state-panel"><mat-spinner diameter="32"></mat-spinner><span>Loading…</span></div>
+      } @else if (error()) {
+        <mat-card class="state-panel state-panel--error"><mat-icon>error_outline</mat-icon><span>{{ error() }}</span></mat-card>
+      } @else if (rows().length === 0) {
+        <mat-card class="state-panel"><mat-icon>inbox</mat-icon><span>No settlement batches for this date.</span></mat-card>
+      } @else {
+        <mat-card class="table-card">
+          <div class="table-scroll">
+            <table mat-table [dataSource]="rows()" class="striped-table">
+              <ng-container matColumnDef="workshop">
+                <th mat-header-cell *matHeaderCellDef>Workshop</th>
+                <td mat-cell *matCellDef="let r">{{ r.workshopName || '—' }}<div class="muted">{{ r.workshopCode }}</div></td>
+              </ng-container>
+              <ng-container matColumnDef="batch">
+                <th mat-header-cell *matHeaderCellDef>Settlement batch</th>
+                <td mat-cell *matCellDef="let r" class="mono">{{ r.batchReference }}</td>
+              </ng-container>
+              <ng-container matColumnDef="bookings">
+                <th mat-header-cell *matHeaderCellDef class="amount">Bookings</th>
+                <td mat-cell *matCellDef="let r" class="amount">{{ r.bookingCount }}</td>
+              </ng-container>
+              <ng-container matColumnDef="gross">
+                <th mat-header-cell *matHeaderCellDef class="amount">Gross</th>
+                <td mat-cell *matCellDef="let r" class="amount">{{ r.grossAdvance | currency: 'INR' : 'symbol' : '1.2-2' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="charges">
+                <th mat-header-cell *matHeaderCellDef class="amount">Platform charges</th>
+                <td mat-cell *matCellDef="let r" class="amount">{{ r.platformCharges | currency: 'INR' : 'symbol' : '1.2-2' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="adjustments">
+                <th mat-header-cell *matHeaderCellDef class="amount">Adjustments</th>
+                <td mat-cell *matCellDef="let r" class="amount">{{ r.adjustments | currency: 'INR' : 'symbol' : '1.2-2' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="net">
+                <th mat-header-cell *matHeaderCellDef class="amount">Net settlement</th>
+                <td mat-cell *matCellDef="let r" class="amount"><strong>{{ r.netSettlement | currency: 'INR' : 'symbol' : '1.2-2' }}</strong></td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let r"><span class="status-chip" [class]="r.status">{{ r.status }}</span></td>
+              </ng-container>
+              <ng-container matColumnDef="gateway">
+                <th mat-header-cell *matHeaderCellDef>Gateway reference</th>
+                <td mat-cell *matCellDef="let r" class="mono">{{ r.gatewayReference || '—' }}</td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="columns"></tr>
+              <tr mat-row *matRowDef="let row; columns: columns" class="clickable"
+                  [class.selected]="row.batchReference === selected()" (click)="select(row)"></tr>
+            </table>
+          </div>
+        </mat-card>
+      }
+    </div>
+
+    @if (selected()) {
+      <div class="detail-column">
+        <mat-card class="detail-card">
+          @if (detailLoading() && !detail()) {
+            <div class="state-panel"><mat-spinner diameter="28"></mat-spinner><span>Loading batch…</span></div>
+          } @else if (detail(); as d) {
+            <h2 class="mono">{{ d.batch.batchReference }}</h2>
+            <p class="muted">{{ d.batch.workshopName }} · {{ d.batch.workshopCode }} · {{ d.batch.settlementDate | date: 'd MMM y' }}</p>
+
+            @if (d.exception) {
+              <div class="exception-banner"><mat-icon>report</mat-icon>
+                <span>{{ d.failureReason || 'This settlement needs attention (failed or only partly paid).' }}</span></div>
+            }
+
+            <dl class="kv">
+              <dt>Status</dt><dd><span class="status-chip" [class]="d.batch.status">{{ d.batch.status }}</span></dd>
+              <dt>Net settlement</dt><dd><strong>{{ d.batch.netSettlement | currency: 'INR' : 'symbol' : '1.2-2' }}</strong></dd>
+              <dt>Gross advance</dt><dd>{{ d.batch.grossAdvance | currency: 'INR' : 'symbol' : '1.2-2' }}</dd>
+              <dt>Platform charges</dt><dd>{{ d.batch.platformCharges | currency: 'INR' : 'symbol' : '1.2-2' }} <span class="muted">(handling fee + TCS)</span></dd>
+              <dt>Gateway reference</dt><dd class="mono">{{ d.batch.gatewayReference || '—' }}</dd>
+              @if (d.batch.completedAt) { <dt>Completed</dt><dd>{{ d.batch.completedAt | date: 'd MMM y, h:mm a' }}</dd> }
+              @if (d.note) { <dt>Note</dt><dd>{{ d.note }}</dd> }
+            </dl>
+
+            <h3>Bookings in this batch</h3>
+            <div class="table-scroll">
+              <table mat-table [dataSource]="d.bookings" class="inner-table">
+                <ng-container matColumnDef="booking">
+                  <th mat-header-cell *matHeaderCellDef>Booking</th>
+                  <td mat-cell *matCellDef="let b"><a class="link" (click)="openBooking(b.bookingNumber, b.bookingId)">{{ b.bookingNumber || b.bookingId }}</a>
+                    <div class="muted">{{ b.vehicleNumber || '' }}</div></td>
+                </ng-container>
+                <ng-container matColumnDef="rider">
+                  <th mat-header-cell *matHeaderCellDef>Rider</th>
+                  <td mat-cell *matCellDef="let b">{{ b.riderName || '—' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="advance">
+                  <th mat-header-cell *matHeaderCellDef class="amount">Advance</th>
+                  <td mat-cell *matCellDef="let b" class="amount">{{ b.advance | currency: 'INR' : 'symbol' : '1.2-2' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="charges">
+                  <th mat-header-cell *matHeaderCellDef class="amount">Charges</th>
+                  <td mat-cell *matCellDef="let b" class="amount">{{ b.charges | currency: 'INR' : 'symbol' : '1.2-2' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="net">
+                  <th mat-header-cell *matHeaderCellDef class="amount">Net</th>
+                  <td mat-cell *matCellDef="let b" class="amount">{{ b.netContribution | currency: 'INR' : 'symbol' : '1.2-2' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Settlement</th>
+                  <td mat-cell *matCellDef="let b"><span class="status-chip" [class]="b.settlementStatus">{{ b.settlementStatus }}</span></td>
+                </ng-container>
+                <ng-container matColumnDef="payment">
+                  <th mat-header-cell *matHeaderCellDef>Payment</th>
+                  <td mat-cell *matCellDef="let b">{{ b.paymentStatus || '—' }}<div class="muted mono">{{ b.cashfreePaymentId || '' }}</div></td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="bookingColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: bookingColumns"></tr>
+              </table>
+            </div>
+
+            <h3>History</h3>
+            @if (d.history.length === 0) {
+              <p class="muted">No events yet.</p>
+            } @else {
+              <ul class="history">
+                @for (h of d.history; track $index) {
+                  <li><strong>{{ h.action }}</strong> · {{ h.at | date: 'd MMM y, h:mm a' }} · {{ h.by }}<div class="muted">{{ h.detail }}</div></li>
+                }
+              </ul>
+            }
+
+            @if (canClose()) {
+              <div class="actions">
+                <button mat-stroked-button color="warn" [disabled]="closing()" (click)="closeOffline()">
+                  <mat-icon>verified</mat-icon> Offline closure…
+                </button>
+                <span class="muted">Super Admin only — for a batch paid outside the payment gateway.</span>
+              </div>
+            }
+          }
+        </mat-card>
+      </div>
+    }
+  </div>
+</div>
